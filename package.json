@@ -1,0 +1,11 @@
+{
+  "name": "weather-ios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "تطبيق الطقس (iOS) مبني بـ Capacitor",
+  "dependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0"
+  }
+}

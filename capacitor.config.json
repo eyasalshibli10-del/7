@@ -1,0 +1,6 @@
+{
+  "appId": "com.yas7.weather",
+  "appName": "الطقس",
+  "webDir": "www",
+  "ios": { "contentInset": "never" }
+}

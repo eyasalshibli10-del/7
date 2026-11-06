@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark"><title>الطقس</title>
+<style>
+:root{--bg:#000;box-sizing:border-box;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg)}
+body{font-family:-apple-system,"SF Arabic","SF Pro Display","Geeza Pro","Segoe UI",Tahoma,sans-serif;color:#fff;overflow:hidden}
+#phone{position:relative;width:100%;height:100%;overflow:hidden;isolation:isolate;background:#000}
+.sky,#glow{position:absolute;inset:0;transition:opacity 1.4s ease;z-index:-6}.sky{opacity:0}.sky.on{opacity:1}
+#glow{z-index:-5;background:linear-gradient(to top,rgba(255,138,60,.6),rgba(255,120,80,.15) 40%,transparent 62%);opacity:0}
+#orb{position:absolute;top:-160px;right:-120px;width:520px;height:520px;border-radius:50%;z-index:-4;mix-blend-mode:screen;transition:opacity 1.4s;background:radial-gradient(circle,#fffdf4 0,rgba(255,246,215,.75) 5%,rgba(255,236,190,.28) 16%,rgba(255,228,170,.1) 38%,transparent 66%)}
+#moon{position:absolute;top:110px;left:18%;width:46px;height:46px;border-radius:50%;z-index:-4;transition:opacity 1.4s;background:radial-gradient(circle at 38% 36%,#fff,#dde4f0 60%,#b8c3d6);box-shadow:0 0 50px 14px rgba(190,205,240,.28),0 0 140px 50px rgba(150,175,230,.14)}
+#stars{position:absolute;inset:0;z-index:-4;transition:opacity 1.4s}
+#stars i{position:absolute;border-radius:50%;background:#fff;animation:tw 4s ease-in-out infinite}
+@keyframes tw{50%{opacity:.2}}
+.cw{position:absolute;left:-30%;width:160%;height:62%;z-index:-3;will-change:transform;transition:opacity 1s;animation:dr 160s linear infinite alternate}
+@keyframes dr{to{transform:translateX(16%)}}
+#compact{position:absolute;top:0;left:0;right:0;z-index:20;text-align:center;padding:env(safe-area-inset-top,0px) 0 12px;opacity:0;transition:opacity .25s;pointer-events:none;background:linear-gradient(rgba(0,0,0,.2),transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);-webkit-mask:linear-gradient(#000 70%,transparent);mask:linear-gradient(#000 70%,transparent)}
+#compact b{display:block;font-size:19px;font-weight:600;margin-top:8px}#compact span{font-size:15px;opacity:.9}
+#scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:env(safe-area-inset-top,0px) 16px 110px;scrollbar-width:none}#scroll::-webkit-scrollbar{display:none}
+#hero,#main{max-width:560px;margin-left:auto;margin-right:auto}
+#hero{text-align:center;padding-top:46px;height:300px;transform-origin:top center;will-change:transform,opacity}
+#hero .loc{font-size:34px;font-weight:400}#hero .sub{font-size:14px;font-weight:600;opacity:.85;margin-top:2px;min-height:18px}
+#hero .t{font-size:104px;font-weight:200;line-height:1.05;letter-spacing:-2px;margin-left:14px;text-shadow:0 2px 20px rgba(0,0,0,.1)}
+#hero .c{font-size:21px;font-weight:500;margin-top:-2px}#hero .hl{font-size:20px;font-weight:500;margin-top:2px}
+.glass{position:relative;border-radius:30px;padding:14px 16px;margin-bottom:12px;overflow:hidden;background:transparent;text-shadow:0 1px 8px rgba(0,0,0,.28);backdrop-filter:blur(1.5px) saturate(135%);-webkit-backdrop-filter:blur(1.5px) saturate(135%);box-shadow:inset 0 1.5px 1px rgba(255,255,255,.9),inset 0 -1.5px 1px rgba(255,255,255,.35),inset 3px 3px 5px -2px rgba(255,255,255,.7),inset -3px -3px 5px -2px rgba(255,255,255,.5),inset 0 -12px 20px -14px rgba(255,255,255,.4),inset 0 0 16px rgba(255,255,255,.04),0 10px 26px rgba(0,25,60,.16);animation:up .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*70ms);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.refract .glass{backdrop-filter:blur(1px) url(#lg) saturate(135%)}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:linear-gradient(135deg,rgba(255,255,255,.7),rgba(255,255,255,0) 38%,rgba(255,255,255,0) 62%,rgba(255,255,255,.4));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.glass::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(180px circle at var(--mx,50%) var(--my,-30%),rgba(255,255,255,.22),transparent 60%);opacity:var(--ho,0);transition:opacity .3s;pointer-events:none}
+.glass:active{transform:scale(.985)}@keyframes up{from{opacity:0;transform:translateY(24px) scale(.97)}}
+.ct{font-size:13px;font-weight:600;opacity:.65;display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.sum{font-size:15px;line-height:1.35;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.22);margin-bottom:10px}
+#hrs{display:flex;gap:20px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}#hrs::-webkit-scrollbar{display:none}
+.h{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:15px;font-weight:600;min-width:36px}.h em{font-style:normal;font-size:16px}
+.row{display:flex;align-items:center;height:44px;border-top:1px solid rgba(255,255,255,.16);font-size:20px;font-weight:500}.row:first-of-type{border:0}
+.row .d{width:72px;font-size:18px}.row .ic{width:44px;display:flex;justify-content:center}.row .lo,.row .hi{width:38px;text-align:center}.row .lo{opacity:.6}
+.tr{position:relative;flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.22);margin:0 10px;transform:scaleX(-1)}
+.fl{position:absolute;top:0;bottom:0;border-radius:3px;background-image:linear-gradient(90deg,#64d2ff,#a8e063,#ffd60a,#ff9f0a)}
+.dot{position:absolute;top:-1px;width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px rgba(0,0,0,.3);transform:translateX(-50%)}
+.t,.lo,.hi,.h em,.big,#cs{unicode-bidi:plaintext}.big{text-align:right}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}.g .glass{margin:0;height:168px;display:flex;flex-direction:column}
+.big{font-size:34px;font-weight:500;margin:2px 0 4px}.cap{font-size:13.5px;line-height:1.3;margin-top:auto}
+.bar{height:5px;border-radius:3px;background:linear-gradient(90deg,#34c759,#ffd60a,#ff9500,#ff3b30,#af52de);position:relative;margin:8px 0}
+.bar i{position:absolute;top:-2px;width:9px;height:9px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px rgba(0,0,0,.35);transform:translateX(-50%)}
+#bar{position:absolute;left:16px;right:16px;max-width:560px;margin:0 auto;bottom:calc(14px + env(safe-area-inset-bottom,0px));height:58px;border-radius:32px;z-index:22;display:flex;align-items:center;justify-content:space-between;padding:0 12px;animation:none}
+#bar button{width:40px;height:40px;border:0;background:none;color:#fff;border-radius:50%;display:grid;place-items:center;cursor:pointer;transition:background .2s,transform .2s}#bar button:active{background:rgba(255,255,255,.25);transform:scale(.9)}
+#dots{display:flex;gap:8px}#dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4);transition:all .35s cubic-bezier(.3,1.4,.5,1);cursor:pointer}#dots i.on{background:#fff;transform:scale(1.25)}
+#sheet{position:fixed;inset:0;z-index:40;background:#000;padding:calc(18px + env(safe-area-inset-top,0px)) 16px 24px;transform:translateY(105%);transition:transform .55s cubic-bezier(.2,.9,.2,1);overflow:auto}#sheet.open{transform:none}
+.sw{max-width:560px;margin:0 auto}.sh1{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.sh1 h2{margin:0;font-size:32px}
+.sh1 button{border:0;background:#1c1c1e;color:#fff;border-radius:18px;height:36px;padding:0 16px;font:inherit;font-size:15px;cursor:pointer}
+.sb{display:flex;align-items:center;gap:8px;background:#1c1c1e;border-radius:12px;height:42px;padding:0 12px;color:#8e8e93;margin-bottom:16px}
+.sb input{flex:1;min-width:0;background:none;border:0;color:#fff;font:inherit;font-size:17px;outline:0}.sb input::placeholder{color:#8e8e93}
+.city{position:relative;display:flex;justify-content:space-between;align-items:flex-end;border-radius:22px;padding:14px 18px;margin-bottom:10px;cursor:pointer;transition:transform .2s;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}.city:active{transform:scale(.97)}
+.city b{font-size:22px;font-weight:600;display:block}.city span{font-size:14px}.city strong{font-size:46px;font-weight:300;display:block;unicode-bidi:plaintext}
+.city em{font-style:normal;font-size:11px;background:rgba(0,0,0,.28);border-radius:8px;padding:2px 7px;margin-top:4px;display:inline-block}
+.del{position:absolute;top:-6px;right:-4px;width:26px;height:26px;border-radius:50%;border:0;background:#ff453a;color:#fff;font-size:18px;line-height:1;cursor:pointer;z-index:2}
+.rs{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;border-bottom:1px solid #2c2c2e;font-size:18px;cursor:pointer}.rs small{display:block;color:#8e8e93;font-size:13px}.rs b{color:#0a84ff;font-weight:500;font-size:16px}
+.nr{color:#8e8e93;text-align:center;padding:30px 10px;line-height:1.6}
+.note{text-align:center;font-size:12px;opacity:.6;margin:18px 6px 6px;line-height:1.6}
+#haze{position:absolute;inset:0;z-index:-2;pointer-events:none;transition:background 1.4s}#grain{position:absolute;inset:0;z-index:-1;pointer-events:none;filter:url(#gr);mix-blend-mode:overlay;opacity:.14}
+#map{position:fixed;inset:0;z-index:45;background:#15263a;transform:translateY(105%);transition:transform .55s cubic-bezier(.2,.9,.2,1)}#map.open{transform:none}
+#map canvas{position:absolute;inset:0;width:100%;height:100%}
+#mtop{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:14px;right:14px;display:flex;gap:10px;align-items:center;z-index:2}
+#mx{width:44px;height:44px;border:0;border-radius:50%;color:#fff;font-size:16px;cursor:pointer;flex:none;padding:0;margin:0;animation:none}
+#seg{display:flex;padding:4px;border-radius:26px;flex:1;max-width:340px;margin:0 auto;animation:none}
+#seg button{flex:1;border:0;background:none;color:#fff;font:inherit;font-size:15px;height:36px;border-radius:20px;cursor:pointer;transition:background .25s}#seg button.on{background:rgba(255,255,255,.28)}
+#mleg{position:absolute;left:14px;right:14px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:2;max-width:560px;margin:0 auto;padding:12px 16px;font-size:14px;line-height:1.5;animation:none}
+#ob{position:fixed;inset:0;z-index:60;overflow:hidden;background:linear-gradient(#0b1a3d,#2a4270 62%,#e8a76a);transition:opacity .6s,visibility .6s}#ob.off{opacity:0;visibility:hidden;pointer-events:none}
+.ps{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(40px + env(safe-area-inset-top,0px)) 24px calc(30px + env(safe-area-inset-bottom,0px));opacity:0;transform:translateX(-40px) scale(.98);pointer-events:none;transition:all .55s cubic-bezier(.2,.9,.2,1)}
+.ps.on{opacity:1;transform:none;pointer-events:auto}.ps.out{transform:translateX(40px) scale(.98)}
+.pw{width:100%;max-width:420px;text-align:center}.pw h1{font-size:34px;font-weight:600;margin:14px 0 8px}.pw p{opacity:.8;line-height:1.6;margin:0 0 18px}
+.pb{width:100%;height:54px;border:0;border-radius:27px;font:inherit;font-size:17px;font-weight:600;cursor:pointer;color:#fff;margin-top:10px;transition:transform .2s,opacity .2s}.pb:active{transform:scale(.97)}
+.pb.pri{background:#0a84ff}.pb.sec{background:rgba(255,255,255,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}.pb:disabled{opacity:.4;cursor:default}
+.pi{width:100%;height:50px;border-radius:14px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font:inherit;font-size:16px;padding:0 14px;margin-bottom:10px;outline:0;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}.pi::placeholder{color:rgba(255,255,255,.55)}
+.tb{height:250px;overflow:auto;text-align:right;font-size:14px;line-height:1.75;padding:14px 16px;border-radius:18px;background:rgba(0,0,0,.28);margin-bottom:14px}.tb h4{margin:10px 0 2px;font-size:15px}.tb h4:first-child{margin-top:0}
+.ck{display:flex;gap:10px;align-items:center;text-align:right;font-size:15px;margin-bottom:6px;cursor:pointer}.ck input{width:22px;height:22px;accent-color:#0a84ff;flex:none}
+.ls{max-height:46vh;overflow:auto;text-align:right;border-radius:18px;background:rgba(0,0,0,.28);margin-top:6px}.ls div{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.1);cursor:pointer;display:flex;justify-content:space-between}.ls div:last-child{border:0}.ls small{opacity:.6}
+.er{color:#ff9f9a;font-size:14px;min-height:20px;margin:2px 0 4px}.lg{width:92px;height:92px;margin:0 auto;animation:pulse 4s ease-in-out infinite}@keyframes pulse{50%{transform:scale(1.08)}}
+.dts{position:absolute;top:calc(22px + env(safe-area-inset-top,0px));display:flex;gap:6px;z-index:2;left:50%;transform:translateX(-50%)}.dts i{width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,.3);transition:background .4s}.dts i.on{background:#fff}
+#scroll{padding-bottom:110px}
+#pills{position:absolute;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;justify-content:center;z-index:21;pointer-events:none}
+#pills button{pointer-events:auto;height:44px;border:0;border-radius:24px;color:#fff;font:inherit;font-size:15px;font-weight:600;padding:0 18px;cursor:pointer;margin:0;animation:none}
+.fs{position:fixed;inset:0;z-index:50;background:#06121f;transform:translateY(105%);transition:transform .55s cubic-bezier(.2,.9,.2,1);overflow:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 16px 40px}.fs.open{transform:none}
+.fw{max-width:600px;margin:0 auto}.fh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.fh h2{margin:0;font-size:24px}.fh button{border:0;background:#1c1c1e;color:#fff;border-radius:50%;width:36px;height:36px;font-size:15px;cursor:pointer;flex:none}
+.nc{background:linear-gradient(135deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:16px;margin-bottom:12px;line-height:1.8;font-size:15px}.nc h3{margin:0 0 6px;font-size:17px}.nc ul{margin:6px 0;padding:0 18px}.nc small{opacity:.7}
+.nk{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.nk div{background:rgba(255,255,255,.07);border-radius:14px;padding:10px 4px;text-align:center;font-size:12px}.nk b{display:block;font-size:22px;color:#ffb340;unicode-bidi:plaintext}
+#nc{width:100%;height:200px;border-radius:18px;display:block;direction:ltr}
+.tl{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:10px;font-size:11px;text-align:center}.tl i{font-style:normal;padding:8px 0;border-radius:8px;background:rgba(255,255,255,.08)}.tl i.pk{background:#ff9f0a;color:#000;font-weight:700}.tl i.dc{background:rgba(255,159,10,.35)}.tl i.ef{background:rgba(10,132,255,.45);grid-column:span var(--s)}
+.src a{color:#64b5ff}
+#am{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;min-height:80px}.mb{max-width:88%;padding:10px 14px;border-radius:18px;font-size:15px;line-height:1.7;white-space:pre-wrap}.mb.u{align-self:flex-start;background:#0a84ff}.mb.a{align-self:flex-end;background:#1c1c1e}
+#ach{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}#ach button{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;font:inherit;font-size:13px;border-radius:16px;padding:7px 12px;cursor:pointer}
+#ar{position:sticky;bottom:0;display:flex;gap:8px;padding:8px 0 4px;background:linear-gradient(transparent,#06121f 30%)}#aiq{flex:1;min-width:0;height:48px;border-radius:24px;border:1px solid rgba(255,255,255,.2);background:#1c1c1e;color:#fff;font:inherit;font-size:16px;padding:0 16px;outline:0}#aisend{width:48px;height:48px;border:0;border-radius:50%;background:#0a84ff;color:#fff;font-size:18px;cursor:pointer;flex:none}
+
+i[data-ic]{display:inline-flex;font-style:normal;vertical-align:middle}
+.fh h2{display:flex;align-items:center;gap:8px}.fh button,#xx,#mx{display:grid;place-items:center}
+.pb i[data-ic]{vertical-align:-4px;margin-inline-end:8px}
+.sr{display:flex;align-items:center;gap:12px;width:100%;border:0;background:rgba(255,255,255,.07);color:#fff;font:inherit;font-size:16px;padding:14px 16px;border-radius:16px;margin-bottom:8px;cursor:pointer;text-align:right}.sr span{flex:1}.sr svg:last-child{opacity:.5}
+.ac{display:flex;gap:14px;align-items:center}.ac small{opacity:.65}.av{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#0a84ff,#5e5ce6);display:grid;place-items:center;font-size:22px;font-weight:700;flex:none}
+.sg{font-size:13px;opacity:.6;margin:16px 4px 8px}
+#gmsg{color:#ffb340;font-size:13px;margin-top:8px;line-height:1.6}
+#orb{animation:sunpulse 7s ease-in-out infinite}
+@keyframes sunpulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.08);filter:brightness(1.14)}}
+#orb::before{content:'';position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(255,252,235,.22) 0 3deg,transparent 3deg 12deg);-webkit-mask:radial-gradient(circle,transparent 3%,#000 9%,transparent 52%);mask:radial-gradient(circle,transparent 3%,#000 9%,transparent 52%);animation:spin 80s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#moon{animation:moonf 9s ease-in-out infinite}@keyframes moonf{50%{transform:translateY(-6px)}}
+.cw{animation-name:dr;animation-duration:70s;animation-timing-function:ease-in-out;animation-iteration-count:infinite;animation-direction:alternate}
+@keyframes dr{from{transform:translateX(-6%)}to{transform:translateX(18%)}}
+#w1{animation-duration:80s}#w3{animation-duration:52s;animation-direction:alternate-reverse}
+
+.t3{display:flex;background:rgba(0,0,0,.22);border-radius:12px;padding:3px;margin-bottom:12px}.t3 button{flex:1;border:0;background:none;color:#fff;font:inherit;font-size:14px;font-weight:600;padding:7px 0;border-radius:10px;cursor:pointer;opacity:.75;transition:background .2s,opacity .2s}.t3 button.on{background:rgba(255,255,255,.28);opacity:1}
+.hl3{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.16);font-size:15px;line-height:1.5}.ct+.hl3{border:0}.hl3 svg{opacity:.85}
+.hln{opacity:.7;font-size:12px;display:block;margin-top:6px}.nodata{font-size:14px;line-height:1.7;opacity:.85;padding:6px 0}
+@media (orientation:landscape) and (max-height:520px){#scroll{display:grid;grid-template-columns:minmax(220px,36%) 1fr;gap:16px;align-items:start;padding-bottom:90px}#hero,#main{max-width:none;margin:0}#hero{position:sticky;top:0;height:auto;padding-top:24px;transform:none!important;opacity:1!important}#hero .t{font-size:72px}#compact{display:none}.g{grid-template-columns:repeat(3,1fr)}}
+
+#fx{position:absolute;inset:0;width:100%;height:100%;z-index:40;pointer-events:none}
+#flash{position:absolute;inset:0;z-index:40;background:#dfe9ff;opacity:0;pointer-events:none;mix-blend-mode:screen}
+#toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);background:rgba(30,30,32,.92);color:#fff;padding:10px 16px;border-radius:18px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:95;max-width:86%;text-align:center}#toast.on{opacity:1;transform:translate(-50%,0)}
+#devb{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:12px;z-index:41;border:0;border-radius:14px;background:rgba(255,159,10,.88);color:#000;font:inherit;font-size:12px;font-weight:700;padding:5px 10px;cursor:pointer}#devb[hidden]{display:none}
+.dis{opacity:.45;pointer-events:none}
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}.cg button{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;border-radius:14px;background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:13px;padding:10px 4px;cursor:pointer}.cg button.on{background:rgba(10,132,255,.6)}
+.lockrow{display:flex;gap:8px;margin-top:10px;align-items:center}.lockrow input{flex:1;min-width:0;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:#1c1c1e;color:#fff;font:inherit;font-size:16px;padding:0 14px;outline:0;direction:ltr;text-align:left}.lockrow button{height:44px;border:0;border-radius:12px;background:#0a84ff;color:#fff;font:inherit;padding:0 18px;cursor:pointer}
+.gmsgx{color:#ffb340;font-size:13px;margin-top:6px}
+
+.vi{border-top:1px solid rgba(255,255,255,.16)}.vi:first-child{border:0}
+.vi>button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;color:#fff;font:inherit;font-size:16px;padding:12px 0;cursor:pointer;text-align:right;text-shadow:inherit}.vi>button b{font-weight:600}.vi>button span{flex:1;opacity:.75;font-size:14px;text-align:left}.vi>button svg:last-child{transition:transform .25s;opacity:.6}.vi.on>button svg:last-child{transform:rotate(-90deg)}
+.vb{display:none;padding-bottom:8px}.vi.on .vb{display:block}
+.vi:not(.on) .vb#hrs{display:none}.vi.on .vb#hrs{display:flex;flex-direction:column;gap:0;overflow-y:auto;overflow-x:hidden;max-height:250px;margin:0;padding:0}
+.vb#hrs .h{flex-direction:row;justify-content:space-between;align-items:center;min-width:0;padding:8px 2px;border-top:1px solid rgba(255,255,255,.12)}.vb#hrs .h:first-child{border:0}
+.wr{display:flex;align-items:center;gap:10px;font-size:20px;padding:6px 0}
+.g>.glass{cursor:pointer;transition:transform .15s}.g>.glass:active{transform:scale(.97)}
+.cdv{font-size:64px;font-weight:300;line-height:1.1}.cdl{font-size:20px;font-weight:600;margin-bottom:6px}
+.scl{display:flex;direction:ltr;height:10px;border-radius:6px;overflow:hidden;margin:14px 0 6px;position:relative}.scl i{flex:1}.scm{position:absolute;top:-3px;width:4px;height:16px;border-radius:2px;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.4);transform:translateX(-50%)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}.tbl td{padding:7px 4px;border-top:1px solid rgba(255,255,255,.12)}.tbl tr.on td{color:#ffb340;font-weight:700}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><filter id="lg" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="0.010 0.016" numOctaves="2" seed="3" result="n"/><feGaussianBlur in="n" stdDeviation="2" result="b"/><feDisplacementMap in="SourceGraphic" in2="b" scale="40" xChannelSelector="R" yChannelSelector="G" result="dr"/><feColorMatrix in="dr" values="1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0" result="r"/><feDisplacementMap in="SourceGraphic" in2="b" scale="32" xChannelSelector="R" yChannelSelector="G" result="dg"/><feColorMatrix in="dg" values="0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0" result="g"/><feDisplacementMap in="SourceGraphic" in2="b" scale="24" xChannelSelector="R" yChannelSelector="G" result="db"/><feColorMatrix in="db" values="0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0" result="bl"/><feBlend in="r" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="bl" mode="screen"/></filter>
+<filter id="c1" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".0038 .0095" numOctaves="6" seed="8"/><feColorMatrix id="m1" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.6 -1"/><feGaussianBlur stdDeviation="1.2"/></filter>
+<filter id="c2" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".007 .016" numOctaves="5" seed="23"/><feColorMatrix id="m2" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 2.6 -1"/><feGaussianBlur stdDeviation="1"/></filter><filter id="c3" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".0038 .0095" numOctaves="6" seed="8"/><feColorMatrix id="m3" values="0 0 0 0 .6 0 0 0 0 .66 0 0 0 0 .78 0 0 0 2.6 -1"/><feGaussianBlur stdDeviation="3"/></filter><filter id="gr"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4"/><feColorMatrix values="1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 1"/></filter></svg>
+<div id="phone">
+<div id="skies"></div><div id="glow"></div><div id="orb"></div><div id="moon"></div><div id="stars"></div>
+<div class="cw" id="w2" style="filter:url(#c2);top:14%;animation-duration:110s"></div><div class="cw" id="w3" style="filter:url(#c3);top:calc(-6% + 14px)"></div><div class="cw" id="w1" style="filter:url(#c1);top:-6%"></div><canvas id="fx"></canvas><div id="flash"></div><div id="haze"></div><div id="grain"></div>
+<button id="devb" hidden></button><div id="compact"><b id="cn"></b><span id="cs"></span></div>
+<div id="scroll"><div id="hero"></div><div id="main"></div></div>
+<div id="bar" class="glass"><div style='display:flex;width:84px'><button id="addb" aria-label="إضافة مدينة"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button><button id='mapb' aria-label='الخريطة'><svg width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='1.8' stroke-linejoin='round'><path d='M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5zM9 4v13.5M15 6.5V20'/></svg></button></div><div id="dots"></div><div style='display:flex;width:84px;justify-content:flex-end'><button id='setb' aria-label='الإعدادات'><i data-ic='gear' data-s='24'></i></button><button id="listb" aria-label="القائمة"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M9 6h12M9 12h12M9 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></button></div></div>
+<div id="sheet"></div><div id='map'><canvas id='mc'></canvas><canvas id='mf'></canvas><div id='mtop'><button id='mx' class='glass'><i data-ic='x' data-s='20'></i></button><div id='seg' class='glass'><button data-l='cl' class='on'>السحب</button><button data-l='rn'>الأمطار</button><button data-l='tp'>الحرارة</button></div><span style='width:44px'></span></div><div id='mleg' class='glass'></div></div>
+<div id='sets' class='fs'><div class='fw'><div class='fh'><h2><i data-ic='gear' data-s='26'></i> الإعدادات</h2><button id='stx'><i data-ic='x' data-s='18'></i></button></div><div id='stb'></div></div></div>
+<div id='dev' class='fs'><div class='fw'><div class='fh'><h2><i data-ic='gear' data-s='26'></i> خيارات المطور</h2><button id='dvx'><i data-ic='x' data-s='18'></i></button></div><div id='devb2'></div></div></div>
+<div id='cd' class='fs'><div class='fw'><div class='fh'><h2 id='cdt'></h2><button id='cdx'><i data-ic='x' data-s='18'></i></button></div><div id='cdb'></div></div></div>
+<div id='toast'></div>
+<div id='nino' class='fs'><div class='fw'><div class='fh'><h2><i data-ic='wave' data-s='26'></i> ظاهرة النينو (El Niño)</h2><button id='nx'><i data-ic='x' data-s='18'></i></button></div><div id='nb'></div></div></div>
+<div id='ai' class='fs'><div class='fw'><div class='fh'><h2><i data-ic='sparkle' data-s='26'></i> المساعد الذكي</h2><button id='ax'><i data-ic='x' data-s='18'></i></button></div><div class='nc' id='aimode' style='font-size:13px;margin-bottom:10px'>أسألني عن طقس مدينتك المعروضة الآن أو عن النينو. أجيب اعتماداً على بيانات التطبيق فقط، وإذا لم تتوفر المعلومة أقولها لك.</div><div id='ach'></div><div id='am'></div><div id='ar'><input id='aiq' placeholder='اكتب سؤالك…' autocomplete='off'><button id='aisend'><i data-ic='send' data-s='20'></i></button></div></div></div>
+<div id='ob'><div class='dts' id='dts'></div>
+<div class='ps on'><div class='pw'><div class='lg' id='lg'></div><h1>مرحباً بك في الطقس</h1><p>توقعات يومية، وخرائط للسحب والأمطار والحرارة، بتصميم الزجاج السائل.</p><button class='pb pri' id='b0'>ابدأ</button></div></div>
+<div class='ps'><div class='pw'><h1>تسجيل الدخول</h1><p>أنشئ حساباً أو سجّل دخولك. الحساب محلي ويُحفظ على جهازك فقط، ولا يُرسل لأي خادم.</p><input class='pi' id='em' type='email' placeholder='البريد الإلكتروني' autocomplete='email'><input class='pi' id='pw' type='password' placeholder='كلمة المرور (6 أحرف على الأقل)' autocomplete='current-password'><div class='er' id='er'></div><button class='pb pri' id='lgb'>متابعة</button><button class='pb sec' id='gg'><i data-ic='g' data-s='20'></i>المتابعة عبر Google</button><button class='pb sec' id='gst'>المتابعة كضيف</button></div></div>
+<div class='ps'><div class='pw'><h1>الشروط والأحكام</h1><div class='tb'><h4>1. قبول الشروط</h4>باستخدامك التطبيق فإنك توافق على هذه الشروط.<h4>2. استخدام الخدمة</h4>التطبيق مخصص للاستخدام الشخصي لمعرفة حالة الطقس، ولا يجوز استخدامه بطريقة تخالف القانون.<h4>3. دقة البيانات</h4>بيانات الطقس للإرشاد فقط. بعض المدن تعرض قيماً تقديرية وهي موسومة بذلك، ولا تُستخدم في قرارات تتعلق بالسلامة. لا نضمن خلو البيانات من الأخطاء.<h4>4. الخصوصية والموقع</h4>يُستخدم موقعك فقط لاختيار أقرب مدينة، ولا يُخزَّن أو يُشارك. بيانات حسابك المحلية تبقى على جهازك.<h4>5. التعديلات</h4>قد نحدّث هذه الشروط من وقت لآخر، واستمرارك بالاستخدام يعني موافقتك عليها.</div><label class='ck'><input type='checkbox' id='ag'><span>أوافق على الشروط والأحكام وسياسة الخصوصية</span></label><button class='pb pri' id='agb' disabled>موافق</button></div></div>
+<div class='ps'><div class='pw'><h1>اختر موقعك</h1><p>حدّد موقعك تلقائياً أو اختر بلدك ومدينتك يدوياً.</p><button class='pb pri' id='loc'><i data-ic='pin' data-s='18'></i>تحديد موقعي تلقائياً</button><div class='er' id='lm' style='color:#fff;opacity:.85'></div><div class='ls' id='ls'></div></div></div></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const CN={clear:'صافٍ',pcloudy:'غائم جزئياً',cloudy:'غائم',rain:'مطر',storm:'عاصفة رعدية',snow:'ثلج'};
+const mk=(id,n,co,k,tz,c,hi,lo,hu,w,wd,uv,fl,sr,ss,o={})=>({id,n,co,k,tz,c,hi,lo,hu,w,wd,uv,fl,sr,ss,...o});
+const D=[
+mk('mct','مسقط','سلطنة عُمان','muscat maskat oman مسقط عمان',4,'cloudy',33,28,69,8,null,3,39,'06:02','17:40',{v:1,days:[[28,33,'cloudy'],[28,33,'cloudy'],[28,34,'clear'],[28,34,'clear'],[28,34,'clear'],[27,33,'clear'],[27,32,'clear'],[27,30,'clear']]}),
+mk('dxb','دبي','الإمارات','dubai دبي الامارات',4,'clear',36,25,55,15,300,7,38,'06:15','17:50'),
+mk('ruh','الرياض','السعودية','riyadh الرياض السعوديه',3,'clear',36,21,25,14,320,7,36,'05:48','17:21'),
+mk('doh','الدوحة','قطر','doha الدوحه قطر',3,'clear',35,25,50,15,310,7,37,'05:46','17:19'),
+mk('cai','القاهرة','مصر','cairo القاهره مصر',3,'clear',29,19,45,16,340,6,29,'06:07','17:45'),
+mk('ist','إسطنبول','تركيا','istanbul اسطنبول تركيا',3,'pcloudy',20,13,70,17,20,3,20,'07:13','18:25'),
+mk('lon','لندن','المملكة المتحدة','london لندن بريطانيا',1,'cloudy',15,9,77,17,230,2,14,'07:31','18:07'),
+mk('par','باريس','فرنسا','paris باريس فرنسا',2,'cloudy',16,10,76,14,240,2,15,'08:06','18:55'),
+mk('nyc','نيويورك','الولايات المتحدة','new york نيويورك امريكا',-4,'pcloudy',19,11,60,15,310,4,18,'07:07','18:17'),
+mk('tyo','طوكيو','اليابان','tokyo طوكيو اليابان',9,'pcloudy',23,16,65,12,30,4,23,'05:41','17:10'),
+mk('kul','كوالالمبور','ماليزيا','kuala lumpur كوالالمبور ماليزيا',8,'pcloudy',33,25,80,9,230,7,40,'07:12','19:15'),
+mk('bom','مومباي','الهند','mumbai مومباي الهند',5.5,'pcloudy',33,25,70,11,280,8,38,'06:39','18:10'),
+mk('syd','سيدني','أستراليا','sydney سيدني استراليا',11,'clear',23,14,60,20,120,7,23,'06:00','19:05')];
+const OM=`sohar|صحار|sohar|pcloudy|35|27|66|10|300|5|41|05:59|17:37
+shinas|شناص|shinas|pcloudy|35|27|66|10|300|5|41|05:57|17:35
+liwa|لوى|liwa|pcloudy|35|27|66|10|300|5|41|05:58|17:36
+saham|صحم|saham|pcloudy|35|27|66|10|300|5|41|05:59|17:37
+khab|الخابورة|khaburah|pcloudy|35|27|65|10|300|5|41|06:00|17:38
+suw|السويق|suwaiq|pcloudy|35|27|65|10|300|5|40|06:00|17:38
+brk|بركاء|barka|pcloudy|34|27|65|10|300|5|40|06:01|17:39
+seeb|السيب|seeb|cloudy|33|28|68|8|null|3|39|06:02|17:40
+mtr|مطرح|muttrah matrah|cloudy|33|28|69|8|null|3|39|06:02|17:40
+bsh|بوشر|bawshar bousher|cloudy|33|28|69|8|null|3|39|06:02|17:40
+amr|العامرات|amerat|cloudy|33|27|66|8|null|3|38|06:02|17:40
+qur|قريات|quriyat|pcloudy|34|27|65|9|60|5|40|06:04|17:42
+nzw|نزوى|nizwa|clear|36|22|35|9|330|8|36|06:01|17:39
+bhl|بهلا|bahla|clear|36|22|35|9|330|8|36|06:01|17:39
+izk|إزكي|izki|clear|36|22|35|9|330|8|36|06:01|17:39
+ham|الحمراء|hamra|clear|36|22|35|9|330|8|36|06:01|17:39
+jab|الجبل الأخضر|jabal akhdar|clear|24|13|35|14|330|8|24|06:01|17:39
+rst|الرستاق|rustaq|clear|37|24|40|9|300|8|37|05:59|17:38
+sml|سمائل|samail|clear|37|24|40|9|300|8|37|06:01|17:39
+bdb|بدبد|bidbid|clear|37|24|40|9|330|8|37|06:02|17:40
+adm|أدم|adam|clear|38|23|30|10|330|8|38|06:03|17:41
+ibr|عبري|ibri|clear|38|23|30|10|320|8|38|05:56|17:36
+ynq|ينقل|yanqul|clear|38|23|30|10|320|8|38|05:55|17:35
+dnk|ضنك|dhank|clear|38|24|30|10|320|8|38|05:55|17:35
+brm|البريمي|buraimi|clear|38|24|35|10|320|8|39|05:55|17:35
+mdh|المضيبي|mudhaibi|clear|37|24|38|9|60|8|37|06:05|17:43
+ibra|إبراء|ibra|clear|37|24|40|9|60|8|38|06:05|17:43
+kml|الكامل والوافي|kamil wafi|clear|36|24|40|10|60|7|37|06:03|17:41
+bdy|بدية|bidiyah|clear|37|24|40|10|60|7|37|06:03|17:41
+sur|صور|sur|pcloudy|33|26|66|12|60|6|38|05:58|17:36
+jln|جعلان بني بو علي|jaalan bani bu ali|pcloudy|34|25|62|12|60|6|38|05:58|17:36
+duq|الدقم|duqm|pcloudy|35|25|58|14|200|7|38|06:03|17:41
+msr|مصيرة|masirah|pcloudy|33|27|70|25|60|7|38|06:02|17:40
+hay|هيما|haima|clear|36|24|30|13|200|7|36|06:10|17:48
+slh|صلالة|salalah|pcloudy|31|24|70|12|240|6|33|06:14|17:56
+taq|طاقة|taqah|pcloudy|31|24|70|12|240|6|33|06:14|17:56
+mrb|مرباط|mirbat|pcloudy|31|24|70|12|240|6|33|06:13|17:55
+thm|ثمريت|thumrait|clear|34|20|35|14|200|8|34|06:15|17:57
+sdh|سدح|sadah|pcloudy|31|24|70|12|240|6|33|06:11|17:53
+khs|خصب|khasab|pcloudy|35|26|62|10|300|5|40|05:52|17:30
+bkh|بخا|bukha|pcloudy|35|26|62|10|300|5|40|05:52|17:30
+dib|دبا|dibba|pcloudy|35|27|62|10|60|5|40|05:55|17:33`.split('\n').map(r=>{const a=r.split('|');return mk('om_'+a[0],a[1],'سلطنة عُمان',a[2]+' oman عمان سلطنة',4,a[3],+a[4],+a[5],+a[6],+a[7],a[8]=='null'?null:+a[8],+a[9],+a[10],a[11],a[12])});D.splice(1,0,...OM);
+const f2c=f=>(f-32)*5/9,hmS=x=>{x=(x%24+24)%24;let h=Math.floor(x),m=Math.round((x-h)*60);if(m==60){h=(h+1)%24;m=0}return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')};
+function sunT(lat,lon,tz){const n=new Date(),y=n.getUTCFullYear(),dn=Math.floor((Date.UTC(y,n.getUTCMonth(),n.getUTCDate())-Date.UTC(y,0,0))/864e5),g=2*Math.PI/365*(dn-1),r=Math.PI/180,eq=229.18*(.000075+.001868*Math.cos(g)-.032077*Math.sin(g)-.014615*Math.cos(2*g)-.040849*Math.sin(2*g)),dec=.006918-.399912*Math.cos(g)+.070257*Math.sin(g)-.006758*Math.cos(2*g)+.000907*Math.sin(2*g)-.002697*Math.cos(3*g)+.00148*Math.sin(3*g),ha=Math.acos(Math.cos(90.833*r)/(Math.cos(lat*r)*Math.cos(dec))-Math.tan(lat*r)*Math.tan(dec))/r;return[(720-4*(lon+ha)-eq)/60+tz,(720-4*(lon-ha)-eq)/60+tz]}
+const hv=(c,x,lh,q)=>curve(c,x)+(c.real?(c.now-curve(c,lh))*Math.max(0,1-q/8):0);
+const REAL={mct:{ll:[58.54,23.59],now:86.6,c:'pcloudy',d:[[79.8,88.1,10],[79.1,87.2,0],[79.3,86.7,15],[78.3,88.0,0],[77.0,87.9,0],[76.8,87.2,0],[77.8,87.6,0],[77.3,88.8,0]]},om_sohar:{ll:[56.71,24.35],now:85.5,c:'pcloudy',d:[[79.6,88.3,10],[78.5,87.9,0],[79.0,87.3,0],[78.8,88.9,5],[78.5,88.5,0],[77.5,88.4,0],[78.5,89.2,0],[78.9,90.0,0]]},om_nzw:{ll:[57.53,22.93],now:93.0,c:'pcloudy',d:[[73.4,94.2,44],[72.3,92.8,15],[71.9,92.1,10],[71.5,92.5,10],[70.3,92.3,0],[69.4,93.0,0],[69.4,93.0,10],[69.3,92.5,0]]},om_sur:{ll:[59.53,22.57],now:87.9,c:'clear',d:[[80.5,91.3,0],[79.8,89.4,0],[81.0,89.4,5],[81.2,90.3,0],[79.2,89.1,0],[77.8,87.2,0],[78.6,88.5,0],[78.6,89.0,0]]},om_slh:{ll:[54.09,17.02],now:87.9,c:'clear',d:[[76.4,89.0,0],[77.3,87.1,0],[77.1,86.4,0],[75.0,86.5,5],[75.5,86.8,10],[76.9,87.3,0],[77.0,87.3,0],[77.2,87.0,0]]},om_duq:{ll:[57.71,19.67],now:81.8,c:'clear',d:[[77.6,83.0,0],[77.8,81.8,5],[77.4,82.7,10],[76.0,83.5,10],[76.1,82.7,5],[78.5,82.9,0],[79.7,82.7,5],[79.9,82.7,0]]},om_khs:{ll:[56.25,26.18],now:90.0,c:'pcloudy',d:[[74.8,93.5,5],[74.1,88.1,0],[74.8,90.3,10],[74.2,90.8,0],[74.0,90.5,0],[74.4,90.6,0],[75.1,89.8,0],[73.9,89.2,0]]},om_brm:{ll:[55.79,24.25],now:96.3,c:'clear',d:[[75.8,97.3,10],[74.6,96.3,0],[75.5,94.8,10],[74.9,95.3,0],[74.2,95.7,0],[74.1,96.2,0],[73.9,95.2,0],[73.7,94.8,0]]},om_ibr:{ll:[56.52,23.23],now:97.4,c:'clear',d:[[76.9,97.9,5],[75.6,95.9,5],[75.2,94.2,10],[73.0,93.9,0],[73.5,94.2,0],[73.0,94.9,0],[72.9,93.8,0],[72.8,93.8,0]]},om_thm:{ll:[54.03,17.67],now:94.8,c:'clear',d:[[70.7,95.6,0],[71.5,95.2,0],[70.9,94.3,0],[67.6,92.5,0],[67.8,91.5,0],[67.8,91.4,0],[67.3,89.6,0],[67.4,89.1,0]]},om_msr:{ll:[58.65,20.67],now:87.4,c:'clear',d:[[77.6,87.8,0],[77.1,87.0,5],[76.7,87.5,5],[75.5,88.4,0],[75.8,87.4,10],[76.0,87.4,10],[75.9,86.8,0],[76.7,86.3,0]]},om_rst:{ll:[57.43,23.39],now:82.0,c:'rain',d:[[72.2,87.2,60],[72.0,86.3,65],[72.8,84.4,20],[73.1,86.7,5],[71.8,85.9,0],[72.8,86.3,0],[73.3,86.8,10],[73.0,86.8,0]]},om_hay:{ll:[56.29,19.96],now:98.0,c:'clear',d:[[72.4,98.2,5],[71.6,96.5,0],[71.2,96.0,0],[68.6,96.0,0],[69.7,95.8,0],[70.0,94.9,0],[69.1,93.1,0],[69.6,92.9,0]]}};
+
+for(const[id,r]of Object.entries(REAL)){const c=D.find(d=>d.id==id);if(!c)continue;const[a,b]=sunT(r.ll[1],r.ll[0],c.tz);Object.assign(c,{real:1,now:f2c(r.now),c:r.c,hi:Math.round(f2c(r.d[0][1])),lo:Math.round(f2c(r.d[0][0])),pc:r.d[0][2],days:r.d.map(x=>[Math.round(f2c(x[0])),Math.round(f2c(x[1])),x[2]]),sr:hmS(a),ss:hmS(b)});if(id!='mct')Object.assign(c,{w:null,wd:null,hu:null,uv:null,fl:null})}
+let S=[];try{S=JSON.parse(localStorage.getItem('wx3')||'[]').filter(i=>D.some(d=>d.id==i))}catch(e){}
+if(!S.length)S=['mct'];const save=()=>{try{localStorage.setItem('wx3',JSON.stringify(S))}catch(e){}};
+var DV={c:null,n:null,exp:false,dev:false};
+const cty0=id=>D.find(d=>d.id==id),cty=id=>{const c=cty0(id);return c&&DV.c?{...c,c:DV.c}:c},tm=s=>{const[a,b]=s.split(':');return +a+b/60};
+const lhr=c=>{const n=new Date();return((n.getUTCHours()+n.getUTCMinutes()/60+c.tz)%24+24)%24};
+const isN=(c,x)=>{if(DV.n!=null)return DV.n;x=(x%24+24)%24;return x<tm(c.sr)||x>tm(c.ss)};
+const f12=x=>{x=(x%24+24)%24;let h=Math.floor(x),m=Math.round((x-h)*60);if(m==60){h=(h+1)%24;m=0}return((h%12)||12)+':'+String(m).padStart(2,'0')+(h<12?' ص':' م')};
+const curve=(c,x)=>{x=(x%24+24)%24;if(x<6)x+=24;return x<=15?c.lo+(c.hi-c.lo)*(.5-.5*Math.cos(Math.PI*(x-6)/9)):c.hi-(c.hi-c.lo)*(.5-.5*Math.cos(Math.PI*(x-15)/15))};
+const dn=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'],dir=a=>['ش','ش.ق','ق','ج.ق','ج','ج.غ','غ','ش.غ'][Math.round(a/45)%8];
+const G={clearD:['#2467b8','#5b9ddb','#bcd8ee'],pcloudyD:['#3a76bb','#7aa9d6','#c6dae9'],cloudyD:['#566a80','#8695a6','#b6c0ca'],clearN:['#03081a','#0b1a3d','#2a4270'],pcloudyN:['#080f26','#18284d','#3a4d73'],cloudyN:['#141a27','#273245','#46526a'],rainD:['#3b4a5c','#5d6e82','#8d9bab'],rainN:['#0d131d','#1a2432','#2f3b4d'],stormD:['#1d2633','#35435a','#5b6a80'],stormN:['#05080f','#0f1624','#222c3f'],snowD:['#4b5d72','#7a8da1','#a9b8c8'],snowN:['#1a2230','#3a475a','#6a7a90']};
+$('#skies').innerHTML=Object.keys(G).map(k=>`<div class="sky" id="s_${k}" style="background:linear-gradient(${G[k].join(',')})"></div>`).join('');
+$('#stars').innerHTML=Array.from({length:90},()=>{const z=Math.random()<.1?2.2:1.2;return`<i style="width:${z}px;height:${z}px;left:${Math.random()*100}%;top:${Math.random()*60}%;animation-delay:-${Math.random()*4}s;opacity:${.35+Math.random()*.65}"></i>`}).join('');
+const mat=(r,g,b,k,bi)=>`0 0 0 0 ${r} 0 0 0 0 ${g} 0 0 0 0 ${b} 0 0 0 ${k} ${bi}`;
+function clouds(c,n){const P={clear:[2.4,-1.3,.55],pcloudy:[2.8,-1.05,.9],cloudy:[3.2,-.72,1],snow:[3.2,-.72,1],rain:[3.2,-.7,1],storm:[3.3,-.66,1]}[c],col=n?[.5,.56,.68]:c=='cloudy'?[.9,.92,.95]:c=='snow'?[.55,.6,.68]:c=='rain'?[.3,.33,.4]:c=='storm'?[.11,.125,.17]:[1,1,1];
+['m1','m2'].forEach((m,i)=>$('#'+m).setAttribute('values',mat(...col,P[0],P[1]+(i?.12:0))));
+$('#m3').setAttribute('values',mat(...(n?[.14,.18,.28]:c=='cloudy'?[.5,.54,.62]:c=='snow'?[.3,.33,.4]:c=='rain'?[.12,.14,.2]:c=='storm'?[.04,.05,.08]:[.62,.7,.82]),P[0],P[1]));$('#w3').style.opacity=P[2]*(n?.5:1)*.85;$('#w1').style.opacity=P[2]*(n?.5:1);$('#w2').style.opacity=P[2]*.6*(n?.45:1)}
+const cloud='M7 19a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 18 9.8 4.6 4.6 0 0 1 17.5 19z';
+const RN='<g stroke="#64d2ff" stroke-width="1.6" stroke-linecap="round"><path d="M8 18.5l-1 2.5M12 18.5l-1 2.5M16 18.5l-1 2.5"/></g>',SN='<g fill="#fff"><circle cx="8" cy="19.5" r="1.1"/><circle cx="12" cy="21.3" r="1.1"/><circle cx="16" cy="19.5" r="1.1"/></g>',ST='<path d="M12.8 15l-3.4 4.6h2.5l-1.1 3.6 4.4-5.4h-2.6z" fill="#ffd60a"/>';
+function ic(t,s=26,n=false){const sun=`<g stroke="#ffd60a" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4.6" fill="#ffd60a" stroke="none"/>${[0,45,90,135,180,225,270,315].map(a=>`<path transform="rotate(${a} 12 12)" d="M12 2.8v2"/>`).join('')}</g>`,moon='<path d="M19 14.5A8 8 0 0 1 9.5 5 8 8 0 1 0 19 14.5z" fill="#f2f2f7"/>',cl=(x,tr)=>`<path ${tr||''} d="${cloud}" fill="${x}"/>`;
+const o=t=='clear'?(n?moon:sun):t=='pcloudy'?(n?`<g transform="translate(-4 -4) scale(.7)">${moon}</g>`:`<g transform="translate(-5 -5) scale(.75)">${sun}</g>`)+cl('#f2f4f7','transform="translate(1 2) scale(.9)"'):t=='rain'?cl('#c9d1db','transform="translate(0 -2)"')+RN:t=='snow'?cl('#e4e8ee','transform="translate(0 -2)"')+SN:t=='storm'?cl('#9aa3b0','transform="translate(0 -2)"')+ST:cl('#e4e8ee');
+return`<svg width="${s}" height="${s}" viewBox="0 0 24 24">${o}</svg>`}
+let cur=0;
+function render(i){cur=i;const c=cty(S[i]),lh=lhr(c),nt=isN(c,lh),sr=tm(c.sr),ss=tm(c.ss),k=c.c+(nt?'N':'D');
+document.querySelectorAll('.sky').forEach(e=>e.classList.toggle('on',e.id=='s_'+k));
+const sp=Math.min(1,Math.max(0,(lh-sr)/(ss-sr))),se=Math.sin(Math.PI*sp),ob=$('#orb'),or=255,og=Math.round(190+65*se),obb=Math.round(120+115*se);ob.style.right='auto';ob.style.left=`calc(${sp*100}% - 260px)`;ob.style.top=`calc(${58-se*52}% - 260px)`;ob.style.background=`radial-gradient(circle,#fffdf4 0,rgba(255,246,215,.7) 4%,rgba(${or},${og},${obb},.3) 15%,rgba(${or},${og},${obb},.1) 38%,transparent 66%)`;
+$('#orb').style.opacity=!nt?(c.c=='clear'?1:c.c=='pcloudy'?.6:.12):0;
+$('#moon').style.opacity=nt?(c.c=='clear'?1:c.c=='pcloudy'?.45:0):0;
+$('#stars').style.opacity=nt?(c.c=='clear'?1:c.c=='pcloudy'?.35:0):0;
+$('#glow').style.opacity=Math.max(0,1-Math.min(Math.abs(lh-ss),Math.abs(lh-sr))/.9)*(c.c=='clear'||c.c=='pcloudy'?.9:.4);
+clouds(c.c,nt);fxSet(c.c);$('#haze').style.background=nt?'linear-gradient(to top,rgba(70,100,160,.3),transparent 38%),radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,0,0,.35))':(c.c=='rain'||c.c=='storm')?'linear-gradient(to top,rgba(120,135,155,.3),transparent 40%),radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,10,30,.35))':'linear-gradient(to top,rgba(235,244,252,.4),transparent 40%),radial-gradient(120% 90% at 50% 40%,transparent 60%,rgba(0,20,60,.22))';
+$('#dots').innerHTML=S.map((_,j)=>`<i class="${j==i?'on':''}" data-i="${j}"></i>`).join('');
+const t0=c.real?Math.round(c.now):Math.round(curve(c,lh));
+$('#hero').innerHTML=`<div class="loc">${c.n}</div><div class="sub">${S[i]=='mct'?'موقعي':c.co}</div><div class="t" id="tt">${t0}°</div><div class="c">${CN[c.c]}</div><div class="hl">العظمى:${c.hi}°&nbsp; الصغرى:${c.lo}°</div>`;
+const tt=$('#tt'),st=performance.now();(function f(n){const p=Math.min(1,(n-st)/800),e=1-Math.pow(1-p,3);tt.textContent=Math.round(t0*e)+'°';if(p<1)requestAnimationFrame(f)})(st);
+$('#cn').textContent=c.n;$('#cs').textContent=t0+'° | '+CN[c.c];
+let hh='';const ev=e=>((e-lh)%24+24)%24;
+for(let q=0;q<24;q++){const x=lh+q;
+if(q>0){const a=ev(sr),b=ev(ss);if(a>q-1&&a<=q)hh+=`<div class="h"><em>${f12(sr)}</em>${ic('clear',26,false).replace(/#ffd60a/g,'#ffb340')}<em>الشروق</em></div>`;if(b>q-1&&b<=q)hh+=`<div class="h"><em>${f12(ss)}</em>${ic('clear',26,false).replace(/#ffd60a/g,'#ff9f0a')}<em>الغروب</em></div>`}
+const h=Math.floor(x)%24;hh+=`<div class="h"><em>${q?((h%12)||12)+(h<12?'ص':'م'):'الآن'}</em>${ic(c.c,28,isN(c,x))}<em>${Math.round(hv(c,x,lh,q))}°</em></div>`}
+const sm=`الأجواء ${CN[c.c]}. العظمى اليوم ${c.hi}° والصغرى ${c.lo}°${c.w!=null?`، والرياح بسرعة ${c.w} كم/س`:''}${c.pc!=null?`، واحتمال الهطول ${c.pc}%`:''}.`;
+const days=c.days||Array.from({length:10},(_,j)=>[c.lo+Math.round(Math.sin(j*1.9+c.hi)*1.4),c.hi+Math.round(Math.cos(j*1.3+c.lo)*1.6),c.c]);
+const mn=Math.min(...days.map(d=>d[0])),mx=Math.max(...days.map(d=>d[1])),rg=mx-mn||1;
+const now=new Date(),rows=days.map((d,j)=>{const l=(d[0]-mn)/rg*100,w=Math.max(8,(d[1]-d[0])/rg*100);return`<div class="row"><span class="d">${j?dn[(now.getDay()+j)%7]:'اليوم'}</span><span class="ic">${c.real?(j?(d[2]>=5?`<small style='color:#7fd2ff;font-size:12px;font-weight:600'>${d[2]}%</small>`:''):ic(c.c,26)):ic(d[2],26)}</span><span class="lo">${d[0]}°</span><div class="tr"><div class="fl" style="left:${l}%;width:${w}%;background-size:${10000/w}% 100%;background-position:${w<100?l/(100-w)*100:0}% 0"></div>${j?'':`<div class="dot" style="left:${Math.min(100,Math.max(0,(t0-mn)/rg*100))}%"></div>`}</div><span class="hi">${d[1]}°</span></div>`}).join('');
+const uvl=c.uv>=11?'شديد':c.uv>=8?'عالٍ جداً':c.uv>=6?'عالٍ':c.uv>=3?'متوسط':'منخفض',prog=Math.min(1,Math.max(0,(lh-sr)/(ss-sr))),a=Math.PI*(1-prog),sx=50+40*Math.cos(a),sy=52-40*Math.sin(a);
+const g=Math.log(c.hu/100)+17.62*t0/(243.12+t0),dew=Math.round(243.12*g/(17.62-g));
+$('#main').innerHTML=`
+${hlCard(c,days,lh,hh,rows)}
+<div class="glass" style="--i:1"><div class="t3" id="ctabs"><button data-t="c" class="on">الحالة</button><button data-t="p">الهطول</button><button data-t="w">الرياح</button></div><div id="hrs">${hh}</div></div>
+<div class="glass" style="--i:1"><div class="ct">${SV('cal',15)} توقعات ${days.length} أيام</div><div id="dr">${rows}</div></div>
+<div class="g">
+<div class="glass" style="--i:2"><div class="ct">${SV('sun',15)} الأشعة فوق البنفسجية${tgs(c,'uv')}</div>${uvCard(c,lh)}</div>
+<div class="glass" style="--i:3"><div class="ct">${SV('sunset',15)} الغروب</div><div class="big">${f12(ss)}</div><svg viewBox="0 0 100 60" style="width:100%;margin-top:2px;transform:scaleX(-1)"><path d="M10 52A40 40 0 0 1 90 52" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-dasharray="1 3" stroke-linecap="round"/><path d="M10 52A40 40 0 0 1 90 52" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" pathLength="1" stroke-dasharray="${prog} 1"/><line x1="2" y1="52" x2="98" y2="52" stroke="rgba(255,255,255,.5)"/><circle cx="${sx}" cy="${sy}" r="5" fill="${prog>0&&prog<1?'#ffd60a':'#8e8e93'}"/></svg><div class="cap">الشروق: ${f12(sr)}</div></div>
+<div class="glass" style="--i:4"><div class="ct">${SV('wind',15)} الرياح${tgs(c,'w')}</div><svg viewBox="0 0 100 100" style="width:112px;height:112px;margin:auto"><circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-dasharray="1 4.2"/>${[['ش',50,16],['ق',86,53],['ج',50,90],['غ',14,53]].map(q=>`<text x="${q[1]}" y="${q[2]}" fill="#fff" opacity=".75" font-size="9" font-weight="600" text-anchor="middle">${q[0]}</text>`).join('')}${c.wd==null?'':`<g style="transform-origin:50px 50px;transform:rotate(${c.wd}deg)"><path d="M50 22v56" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/><path d="M44 30l6-9 6 9z" fill="#fff"/></g>`}<circle cx="50" cy="50" r="19" fill="rgba(0,0,0,.28)"/><text x="50" y="51" fill="#fff" font-size="14" font-weight="600" text-anchor="middle">${c.w==null?'—':c.w}</text><text x="50" y="62" fill="#fff" opacity=".7" font-size="7" text-anchor="middle">كم/س ${c.wd==null?'':dir(c.wd)}</text></svg></div>
+<div class="glass" style="--i:5"><div class="ct">${SV('drop',15)} الهطول</div><div class="big">${c.pc!=null?c.pc+'%':'—'}</div><div style="font-weight:600;font-size:17px">${c.pc!=null?'احتمال الهطول':'غير متوفر'}</div><div class="cap">${c.pc!=null?'اليوم.'+(days&&days[1]?' بكرة '+days[1][2]+'%.':''):'لا يوجد مصدر هطول فعلي لهذه المدينة.'}</div></div>
+<div class="glass" style="--i:6"><div class="ct">${SV('therm',15)} الإحساس الحراري${tgs(c,'fl')}</div><div class="big">${c.fl==null?'—':c.fl+'°'}</div><div class="cap">${c.fl==null?'لا يتوفر مصدر للإحساس الحراري في هذه المدينة.':'عند ذروة الحرارة اليوم. '+(c.fl>c.hi?'الرطوبة تجعل الجو أدفأ.':'قريب من درجة الحرارة الفعلية.')}</div></div>
+<div class="glass" style="--i:7"><div class="ct">${SV('humid',15)} الرطوبة${tgs(c,'hu')}</div><div class="big">${c.hu==null?'—':c.hu+'%'}</div><div class="cap">${c.hu==null?'لا يتوفر مصدر للرطوبة في هذه المدينة.':'نقطة الندى الآن '+dew+'°.'}</div></div>
+${moonCard(c,lh)}
+</div>
+<div class="note">${c.real?'الحالة الحالية ودرجات الحرارة واحتمال الهطول لـ 8 أيام: بيانات فعلية جُلبت في 27 أكتوبر 2026. منحنى الساعات مُقدَّر، والشروق والغروب محسوبان فلكياً.'+(c.id=='mct'?' الرطوبة والرياح والأشعة من timeanddate (14 أكتوبر).':''):'قيم تقديرية لهذه المدينة وليست بيانات حيّة.'}</div>`;
+[[2,c.uv],[4,c.w],[6,c.fl],[7,c.hu]].forEach(([i,v])=>{if(v==null)document.querySelector('#main [style*="--i:'+i+'"]')?.remove()});
+document.querySelectorAll('#main .glass').forEach(g=>{g.addEventListener('pointermove',e=>{const r=g.getBoundingClientRect();g.style.setProperty('--mx',e.clientX-r.left+'px');g.style.setProperty('--my',e.clientY-r.top+'px');g.style.setProperty('--ho',1)});g.addEventListener('pointerleave',()=>g.style.setProperty('--ho',0))});
+onScroll()}
+function onScroll(){const y=$('#scroll').scrollTop,p=Math.min(1,y/150),h=$('#hero');h.style.opacity=1-Math.min(1,y/110);h.style.transform=`translateY(${y*.35}px) scale(${1-p*.12})`;$('#compact').style.opacity=y>150?1:0}
+$('#scroll').addEventListener('scroll',onScroll,{passive:true});
+$('#dots').addEventListener('click',e=>{if(e.target.dataset.i!=null){$('#scroll').scrollTop=0;render(+e.target.dataset.i)}});
+let sx0=0;$('#scroll').addEventListener('touchstart',e=>sx0=e.touches[0].clientX,{passive:true});
+$('#scroll').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-sx0;if(Math.abs(d)>70&&!e.target.closest('#hrs')){const n=cur+(d>0?1:-1);if(n>=0&&n<S.length)render(n)}});
+// sheet
+const sh=$('#sheet'),nz=s=>s.toLowerCase().replace(/[\u064B-\u065F]/g,'').replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي').trim();let edit=false;
+function list(){const q=nz($('#q').value),L=$('#sl');
+if(!q){L.innerHTML=S.map((id,i)=>{const c=cty(id),lh=lhr(c),k=c.c+(isN(c,lh)?'N':'D');return`<div class="city" data-i="${i}" style="background:linear-gradient(${G[k][0]},${G[k][2]})">${edit&&S.length>1?`<button class="del" data-d="${i}">−</button>`:''}<div><b>${c.n}</b><span>${f12(lh)} · ${CN[c.c]}</span>${c.real?'':'<br><em>تقديري</em>'}</div><div style="text-align:left"><strong>${c.real?Math.round(c.now):Math.round(curve(c,lh))}°</strong><span>العظمى:${c.hi}° الصغرى:${c.lo}°</span></div></div>`}).join('');return}
+const r=D.filter(d=>nz(d.n+' '+d.k+' '+d.co).includes(q));
+L.innerHTML=r.length?r.map(d=>`<div class="rs" data-a="${d.id}"><div>${d.n}<small>${d.co}</small></div><b>${S.includes(d.id)?'مضافة':'إضافة'}</b></div>`).join(''):`<div class="nr">لا توجد نتائج.<br>المدن المتاحة في هذه النسخة محدودة.</div>`}
+function openSheet(f){edit=false;sh.innerHTML=`<div class="sw"><div class="sh1"><h2>الطقس</h2><div style="display:flex;gap:8px"><button id="ed">تعديل</button><button id="xx">${SV('x',16)}</button></div></div><div class="sb"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="q" placeholder="ابحث عن مدينة أو مطار" autocomplete="off"></div><div id="sl"></div></div>`;sh.classList.add('open');list();
+$('#q').oninput=list;$('#xx').onclick=()=>sh.classList.remove('open');$('#ed').onclick=()=>{edit=!edit;$('#ed').textContent=edit?'تم':'تعديل';list()};
+$('#sl').onclick=e=>{const d=e.target.closest('[data-d]'),a=e.target.closest('[data-a]'),c=e.target.closest('[data-i]');
+if(d){S.splice(+d.dataset.d,1);save();render(Math.min(cur,S.length-1));list();return}
+if(a){if(!S.includes(a.dataset.a)){S.push(a.dataset.a);save()}sh.classList.remove('open');$('#scroll').scrollTop=0;render(S.indexOf(a.dataset.a));return}
+if(c&&!edit){sh.classList.remove('open');$('#scroll').scrollTop=0;render(+c.dataset.i)}};
+if(f)setTimeout(()=>$('#q').focus(),450)}
+$('#listb').onclick=()=>openSheet(false);$('#addb').onclick=()=>openSheet(true);
+const XY=Object.fromEntries(Object.entries(REAL).map(([k,v])=>[k,v.ll]));
+const LAND=[[30,10],[30,30],[48,30],[49.5,27],[50.2,26.2],[50.75,26],[51.25,26.1],[51.65,25.5],[51.6,24.6],[52.5,24.1],[53.6,24.2],[54.5,24.5],[55.3,25.3],[56,26],[56.35,26.4],[56.4,25.7],[56.35,25],[56.8,24.45],[57.4,23.9],[58.2,23.7],[58.8,23.65],[59.3,22.9],[59.85,22.5],[59.45,21.4],[58.9,20.8],[58.5,20.4],[57.8,19.8],[57.8,19],[56.5,18.3],[55.8,17.3],[55,16.8],[54.1,16.95],[53.1,16.7],[52.2,16.45],[50,15.2],[45,12.8],[30,10]];
+let ml='cl',W=0,H=0,sc=1,mt=0,dpr=1,MP=[],parts=[],cg=null,loopId=0;const oc=document.createElement('canvas');
+const CX=56.5,CY=21.5,PX=(lo,la)=>[W/2+(lo-CX)*sc*.93,H/2-(la-CY)*sc],UN=(x,y)=>[CX+(x-W/2)/(sc*.93),CY-(y-H/2)/sc];
+const idw=(lo,la,f)=>{let a=0,b=0;for(const p of MP){const d=(p.lo-lo)**2+(p.la-la)**2+.05,k=1/(d*d);a+=f(p)*k;b+=k}return a/b};
+const wc=s=>s<8?'#7fd6ff':s<14?'#6ee7b7':s<20?'#ffe066':'#ff9f43';
+function msize(){const m=$('#map');W=m.clientWidth;H=m.clientHeight;dpr=Math.min(2,devicePixelRatio||1);sc=Math.min(W/8.5,H/10.5);['mc','mf'].forEach(id=>{const c=$('#'+id);c.width=W*dpr;c.height=H*dpr;c.getContext('2d').setTransform(dpr,0,0,dpr,0,0)});
+MP=Object.keys(XY).map(id=>{const c=cty(id),d=(c.wd==null?300:c.wd)*Math.PI/180;return{id,c,lo:XY[id][0],la:XY[id][1],cov:{clear:.08,pcloudy:.5,cloudy:.92}[c.c],u:-Math.sin(d)*c.w,v:-Math.cos(d)*c.w}});
+const g=$('#mc').getContext('2d'),s=g.createLinearGradient(0,0,0,H);s.addColorStop(0,'#15263a');s.addColorStop(1,'#1e3d55');g.fillStyle=s;g.fillRect(0,0,W,H);
+g.beginPath();LAND.forEach((p,i)=>{const[x,y]=PX(p[0],p[1]);i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.fillStyle='#2e3b36';g.fill();g.strokeStyle='rgba(255,255,255,.3)';g.lineWidth=1.2;g.stroke();
+g.font='600 12px -apple-system,Tahoma,sans-serif';g.textAlign='center';
+for(const p of MP){const[x,y]=PX(p.lo,p.la),t=Math.round(p.c.now);g.fillStyle='#fff';g.beginPath();g.arc(x,y,3,0,7);g.fill();g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=4;g.fillText(p.c.n+' '+t+'°',x,y-8);g.shadowBlur=0}
+const w=100,h=Math.round(100*H/W);oc.width=w;oc.height=h;cg=new Float32Array(w*h);for(let j=0;j<h;j++)for(let i=0;i<w;i++){const[lo,la]=UN((i+.5)/w*W,(j+.5)/h*H);cg[j*w+i]=idw(lo,la,p=>p.cov)}}
+function mlayer(l){ml=l;document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.l==l));$('#mf').getContext('2d').clearRect(0,0,W,H);
+parts=Array.from({length:l=='wn'?1100:0},()=>({x:Math.random()*W,y:Math.random()*H,a:Math.random()*80|0}));
+const nt='<div style="font-size:12px;opacity:.65;margin-top:6px">تصوّر تقديري مبني على قيم المدن، وليس رادار حيّ.</div>',lb=(a,b)=>`<div style="display:flex;justify-content:space-between;font-size:12px;opacity:.75;margin-top:4px"><span>${a}</span><span>${b}</span></div>`;
+$('#mleg').innerHTML=l=='cl'?`<b>غطاء السحب</b><div style="height:6px;border-radius:3px;margin-top:8px;background:linear-gradient(270deg,rgba(255,255,255,.08),#fff)"></div>${lb('صافٍ','غائم')}${nt}`:l=='wn'?`<b>سرعة الرياح (كم/س)</b><div style="height:6px;border-radius:3px;margin-top:8px;background:linear-gradient(270deg,#7fd6ff,#6ee7b7,#ffe066,#ff9f43)"></div>${lb('هادئة','قوية')}${nt}`:`<b>الهطول</b><div style="margin-top:4px">لا يوجد هطول متوقع حاليًا في المدن المعروضة (0 ملم).</div>${nt}`}
+function mcloud(){const w=oc.width,h=oc.height,x=oc.getContext('2d'),im=x.createImageData(w,h);for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=j*w+i,n=.5+.25*(Math.sin(i*.22+mt*.02)+Math.sin(j*.19-mt*.015)*Math.cos(i*.08+j*.1+mt*.01)),v=Math.max(0,Math.min(1,cg[k]*1.5*(n+.25)-.18));im.data[k*4]=im.data[k*4+1]=im.data[k*4+2]=255;im.data[k*4+3]=v*215}x.putImageData(im,0,0);const f=$('#mf').getContext('2d');f.clearRect(0,0,W,H);f.imageSmoothingEnabled=true;f.imageSmoothingQuality='high';f.drawImage(oc,0,0,W,H)}
+function mloop(my){if(my!==loopId||!$('#map').classList.contains('open'))return;requestAnimationFrame(()=>mloop(my));mt++;const x=$('#mf').getContext('2d');
+if(ml=='wn'){x.globalCompositeOperation='destination-out';x.fillStyle='rgba(0,0,0,.07)';x.fillRect(0,0,W,H);x.globalCompositeOperation='source-over';x.lineWidth=1.3;for(const p of parts){const[lo,la]=UN(p.x,p.y),u=idw(lo,la,q=>q.u),v=idw(lo,la,q=>q.v),s=Math.hypot(u,v),nx=p.x+u*.16,ny=p.y-v*.16;x.strokeStyle=wc(s);x.beginPath();x.moveTo(p.x,p.y);x.lineTo(nx,ny);x.stroke();p.x=nx;p.y=ny;if(++p.a>90||nx<0||nx>W||ny<0||ny>H){p.x=Math.random()*W;p.y=Math.random()*H;p.a=Math.random()*40|0}}}
+else if(ml=='cl'&&mt%2==0)mcloud()}
+$('#mapb').onclick=()=>{$('#map').classList.add('open');msize();mlayer(ml);mloop(++loopId)};
+$('#mx').onclick=()=>{$('#map').classList.remove('open');loopId++};
+$('#seg').onclick=e=>{const b=e.target.closest('button');if(b)mlayer(b.dataset.l)};
+addEventListener('resize',()=>{if($('#map').classList.contains('open')){msize();mlayer(ml)}});
+const hsl=h=>{const s=.85,l=.55,a=s*Math.min(l,1-l),f=n=>{const k=(n+h/30)%12;return Math.round(255*(l-a*Math.max(-1,Math.min(k-3,9-k,1))))};return[f(0),f(8),f(4)]};
+function mlayer(l){ml=l;document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.l==l));const f=$('#mf').getContext('2d');f.clearRect(0,0,W,H);parts=[];MP.forEach(p=>{p.pc=p.c.pc||0;p.tp=p.c.now});
+const nt='<div style="font-size:12px;opacity:.65;margin-top:6px">مُستوفى بين 13 مدينة عُمانية ببيانات فعلية (15 أكتوبر 2026)، وليس رادارًا حيًّا.</div>',lb=(a,b)=>`<div style="display:flex;justify-content:space-between;font-size:12px;opacity:.75;margin-top:4px"><span>${a}</span><span>${b}</span></div>`,bar=g=>`<div style="height:6px;border-radius:3px;margin-top:8px;background:linear-gradient(270deg,${g})"></div>`;
+if(l!='cl'){const w=100,h=Math.round(100*H/W),x=oc.getContext('2d'),im=x.createImageData(w,h);for(let j=0;j<h;j++)for(let i=0;i<w;i++){const[lo,la]=UN((i+.5)/w*W,(j+.5)/h*H),k=(j*w+i)*4;if(l=='rn'){const v=idw(lo,la,p=>p.pc);im.data[k]=70;im.data[k+1]=170;im.data[k+2]=255;im.data[k+3]=Math.min(210,v*5)}else{const t=idw(lo,la,p=>p.tp),[r,g,b]=hsl(Math.max(0,Math.min(220,220-(t-26)/20*220)));im.data[k]=r;im.data[k+1]=g;im.data[k+2]=b;im.data[k+3]=150}}
+x.putImageData(im,0,0);f.save();f.beginPath();LAND.forEach((p,i)=>{const[X,Y]=PX(p[0],p[1]);i?f.lineTo(X,Y):f.moveTo(X,Y)});f.closePath();f.clip();f.imageSmoothingEnabled=true;f.imageSmoothingQuality='high';f.drawImage(oc,0,0,W,H);f.restore()}
+const mx=MP.reduce((a,p)=>p.pc>a.pc?p:a,MP[0]),hot=MP.reduce((a,p)=>p.tp>a.tp?p:a,MP[0]),cold=MP.reduce((a,p)=>p.tp<a.tp?p:a,MP[0]);
+$('#mleg').innerHTML=l=='cl'?`<b>غطاء السحب</b>${bar('rgba(255,255,255,.08),#fff')}${lb('صافٍ','غائم')}${nt}`:l=='rn'?`<b>احتمال الهطول اليوم</b>${bar('rgba(70,170,255,.1),rgb(70,170,255)')}${lb('0%','50%+')}<div style="margin-top:6px">أعلى احتمال: ${mx.pc}% في ${mx.c.n}</div>${nt}`:`<b>درجة الحرارة الحالية</b>${bar('hsl(220 85% 55%),hsl(150 85% 55%),hsl(60 85% 55%),hsl(0 85% 55%)')}${lb('26°','46°+')}<div style="margin-top:6px">الأعلى: ${Math.round(hot.tp)}° ${hot.c.n} · الأدنى: ${Math.round(cold.tp)}° ${cold.c.n}</div>${nt}`}
+if(/Chrome\//.test(navigator.userAgent))document.documentElement.classList.add('refract');
+const ob=$('#ob'),steps=[...ob.querySelectorAll('.ps')];let st=0;
+$('#lg').innerHTML=ic('pcloudy',92);$('#dts').innerHTML=steps.map(()=>'<i></i>').join('');
+const dots2=()=>document.querySelectorAll('#dts i').forEach((d,i)=>d.classList.toggle('on',i<=st));dots2();
+function go(n){const o=steps[st];o.classList.remove('on');o.classList.add('out');setTimeout(()=>o.classList.remove('out'),600);st=n;steps[n].classList.add('on');dots2()}
+try{if(localStorage.getItem('wx_ob'))ob.classList.add('off')}catch(e){}
+$('#b0').onclick=()=>go(1);$('#gst').onclick=()=>{setUser({p:'guest'});go(2)};$('#gg').onclick=()=>googleLogin(()=>go(2));
+const sha=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+$('#lgb').onclick=async()=>{const e=$('#em').value.trim().toLowerCase(),p=$('#pw').value,er=$('#er');
+if(!/^\S+@\S+\.\S+$/.test(e)){er.textContent='أدخل بريداً إلكترونياً صحيحاً.';return}
+if(p.length<6){er.textContent='كلمة المرور 6 أحرف على الأقل.';return}
+let acc=null,h='';try{acc=JSON.parse(localStorage.getItem('wx_acc')||'null')}catch(x){}
+try{h=await sha(p)}catch(x){er.textContent='تعذّر التحقق على هذا المتصفح.';return}
+if(acc&&acc.e==e&&acc.h!=h){er.textContent='كلمة المرور غير صحيحة.';return}
+try{localStorage.setItem('wx_acc',JSON.stringify({e,h}))}catch(x){}
+er.textContent='';setUser({e,p:'local'});go(2)};
+$('#ag').onchange=e=>$('#agb').disabled=!e.target.checked;$('#agb').onclick=()=>go(3);
+const fin=id=>{S=S.filter(x=>x!=id);S.unshift(id);save();try{localStorage.setItem('wx_ob','1')}catch(e){}ob.classList.add('off');$('#scroll').scrollTop=0;render(0)};
+$('#loc').onclick=()=>{const m=$('#lm');m.textContent='جارٍ تحديد موقعك…';if(!navigator.geolocation){m.textContent='المتصفح لا يدعم تحديد الموقع. اختر بلدك من القائمة.';return}
+navigator.geolocation.getCurrentPosition(p=>{let b=null,bd=1e9;for(const[id,ll]of Object.entries(XY)){const d=Math.hypot((ll[0]-p.coords.longitude)*Math.cos(p.coords.latitude*Math.PI/180)*111,(ll[1]-p.coords.latitude)*111);if(d<bd){bd=d;b=id}}
+if(bd>250){m.textContent='لا تتوفر بيانات فعلية قريبة من موقعك. اختر مدينتك من القائمة.';return}
+m.textContent='أقرب مدينة: '+cty(b).n;setTimeout(()=>fin(b),800)},()=>{m.textContent='تعذّر الوصول للموقع (ربما رُفض الإذن). اختر بلدك من القائمة.'},{timeout:10000})};
+const cos=[...new Set(D.map(d=>d.co))];
+function showCo(){$('#ls').innerHTML=cos.map(c=>`<div data-c='${c}'><span>${c}</span><small>${D.filter(d=>d.co==c).length} ‹</small></div>`).join('')}
+$('#ls').onclick=e=>{const c=e.target.closest('div');if(!c)return;if(c.dataset.c)$('#ls').innerHTML=`<div data-b='1'><span>› رجوع</span></div>`+D.filter(d=>d.co==c.dataset.c).map(d=>`<div data-i='${d.id}'><span>${d.n}</span><small>${d.real?'':'تقديري'}</small></div>`).join('');else if(c.dataset.b)showCo();else if(c.dataset.i)fin(c.dataset.i)};showCo();
+const AIN='حقائق عن النينو (المصدر: NOAA CPC بتاريخ 8 أكتوبر 2026 وتقارير المركز الوطني للإنذار المبكر من المخاطر المتعددة في عُمان): إنذار النينو ساري؛ النينو يزداد قوة؛ قوي إلى قوي جداً حتى يناير–مارس 2027 باحتمال أكثر من 83%. Niño-3.4 = +2.1°م، Niño-3 = +3.0، Niño-1+2 = +3.9، وتجاوز الشذوذ +4.0 في أجزاء من شرق المحيط الهادئ. فرصة حدث تاريخي (RONI ≥ +2.5 لمتوسط 3 أشهر): 54% سبتمبر–نوفمبر، 83% أكتوبر–ديسمبر، 70% نوفمبر–يناير. الذروة المتوقعة نوفمبر–ديسمبر 2026 ثم ضعف تدريجي من يناير–فبراير 2027. عُمان: أمطار فوق المعدل في الشمال أكتوبر–نوفمبر، وتحت المعدل على ساحل بحر العرب في أكتوبر، وديسمبر قرب المعدل عدا الشمال؛ متوسط 1980–2025 خلال سنوات النينو: +20% (سبتمبر–نوفمبر) +31% (ديسمبر–فبراير) +54% (مارس–مايو)؛ حرارة فوق المعدل أكتوبر–ديسمبر؛ أنظمة مدارية ممكنة في بحر العرب أكتوبر–ديسمبر ولا تُنسب للنينو وحده؛ خطر أمطار غزيرة على جبال الحجر ومسندم. التحديث التالي من NOAA: 12 نوفمبر 2026.';
+let nid=0;
+function ninoDraw(my){const cv=$('#nc'),W=cv.clientWidth||340,H=200,d=Math.min(2,devicePixelRatio||1);cv.width=W*d;cv.height=H*d;const x=cv.getContext('2d');
+const X=l=>(l-120)/170*W,Y=a=>H/2-a/17*(H/2),A=[[150,0],[215,2.1],[240,3],[275,3.9],[290,3.9]],an=l=>{if(l<=150)return 0;for(let i=1;i<A.length;i++)if(l<=A[i][0]){const p=A[i-1],q=A[i];return p[1]+(q[1]-p[1])*(l-p[0])/(q[0]-p[0])}return 3.9};
+let t=0;(function f(){if(my!==nid||!$('#nino').classList.contains('open'))return;requestAnimationFrame(f);t+=.02;x.setTransform(d,0,0,d,0,0);
+const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0c2d4d');g.addColorStop(.5,'#0a3a63');g.addColorStop(1,'#071f38');x.fillStyle=g;x.fillRect(0,0,W,H);
+for(let px=0;px<W;px+=2){const l=120+px/W*170,a=an(l);if(a<=0)continue;const half=(12+a*10)*(1+.07*Math.sin(px*.06-t*3)),hue=Math.max(0,55-a*13),gr=x.createLinearGradient(0,H/2-half,0,H/2+half);gr.addColorStop(0,`hsla(${hue},95%,55%,0)`);gr.addColorStop(.5,`hsla(${hue},95%,55%,${Math.min(.9,a/4)})`);gr.addColorStop(1,`hsla(${hue},95%,55%,0)`);x.fillStyle=gr;x.fillRect(px,H/2-half,2,half*2)}
+x.strokeStyle='rgba(255,255,255,.07)';x.lineWidth=1;for(let i=0;i<5;i++){x.beginPath();for(let px=0;px<=W;px+=6){const yy=H*.15+i*H*.17+Math.sin(px*.04+t*2+i)*3;px?x.lineTo(px,yy):x.moveTo(px,yy)}x.stroke()}
+x.fillStyle='#22332b';x.beginPath();x.moveTo(X(281),0);x.lineTo(X(282),Y(5));x.lineTo(X(279.5),Y(0));x.lineTo(X(280.5),Y(-8));x.lineTo(X(282),Y(-17));x.lineTo(W,H);x.lineTo(W,0);x.fill();
+[[121,127,6,-4],[141,150,2,-8]].forEach(([a,b,u,v])=>{x.beginPath();x.ellipse(X((a+b)/2),Y((u+v)/2),(X(b)-X(a))/2,(Y(v)-Y(u))/2,0,0,7);x.fill()});
+x.lineWidth=1.4;x.font='600 10px -apple-system,Tahoma,sans-serif';x.textAlign='center';
+[['Niño 4',160,210,5,-5,'',-1],['Niño 3.4',190,240,5,-5,'+2.1°C',1],['Niño 3',210,270,5,-5,'+3.0°C',-1],['Niño 1+2',270,280,0,-10,'+3.9°C',1]].forEach(([n,a,b,u,v,val,pos])=>{x.strokeStyle='rgba(255,255,255,.8)';x.setLineDash([4,3]);x.strokeRect(X(a),Y(u),X(b)-X(a),Y(v)-Y(u));x.setLineDash([]);x.fillStyle='#fff';x.fillText(n+(val?' '+val:''),Math.min(W-34,(X(a)+X(b))/2),pos<0?Y(u)-5:Y(v)+13)})})()}
+function ninoBuild(){const mo=['أكتوبر','نوفمبر','ديسمبر','يناير','فبراير','مارس','أبريل','مايو'],cl=['','pk','pk','dc','dc','','',''];
+$('#nb').innerHTML=`<div class='nc' style='background:linear-gradient(135deg,rgba(255,159,10,.22),rgba(255,69,58,.1))'><h3>الحالة الآن: إنذار النينو (El Niño Advisory)</h3>النينو يزداد قوة، ويُرجَّح أن يكون <b>قوياً إلى قوياً جداً</b> حتى يناير–مارس 2027 باحتمال أكثر من 83% (NOAA، 8 أكتوبر 2026).<div class='nk'><div><b>+2.1°</b>Niño 3.4</div><div><b>+3.0°</b>Niño 3</div><div><b>+3.9°</b>Niño 1+2</div></div>تجاوزت الشذوذات الحرارية <b>+4.0°م</b> في أجزاء من شرق المحيط الهادئ الاستوائي.</div>
+<div class='nc'><h3>شكل الظاهرة</h3><canvas id='nc'></canvas><small>رسم توضيحي: لسان من المياه الدافئة يمتد من سواحل أمريكا الجنوبية (يمين) باتجاه وسط المحيط الهادئ، وتظهر مناطق الرصد Niño. القيم عند مراكز المناطق من NOAA، وما بينها استيفاء تقريبي، وليست صورة قمر صناعي.</small></div>
+<div class='nc'><h3>أرقام التاريخية</h3>فرصة حدث <b>تاريخي</b> يفوق كل ما سُجّل منذ 1950 (متوسط 3 أشهر ≥ +2.5°م وفق المؤشر النسبي RONI):<div class='nk'><div><b>54%</b>سبتمبر–نوفمبر</div><div><b>83%</b>أكتوبر–ديسمبر</div><div><b>70%</b>نوفمبر–يناير</div></div></div>
+<div class='nc'><h3>الجدول الزمني المتوقع</h3><div class='tl'>${mo.map((m,i)=>`<i class='${cl[i]}'>${m}</i>`).join('')}<i class='ef' style='--s:3'>أمطار عُمان: +20%*</i><i class='ef' style='--s:3'>+31% (ديسمبر–فبراير)</i><i class='ef' style='--s:2'>+54% (مارس–مايو)</i></div><small>برتقالي ساطع: الذروة المتوقعة (نوفمبر–ديسمبر 2026) · برتقالي خافت: بدء الضعف عند معظم النماذج (يناير–فبراير 2027)، ومع ذلك أكثر من 90% منها يُبقي النينو قائماً في مارس. الأزرق: متوسط زيادة الأمطار في عُمان خلال سنوات النينو بين 1980 و2025 (*سبتمبر–نوفمبر).</small></div>
+<div class='nc'><h3>هل يقترب من منطقتنا؟ ومتى؟</h3>النينو <b>ليس عاصفة ولا يتحرك بمسار</b>؛ هو ارتفاع في حرارة مياه المحيط الهادئ يغيّر دوران الغلاف الجوي، فيصل أثره إلينا عبر الجو دون أن «يسافر». لذلك لا يوجد موعد وصول: التأثير يبدأ تدريجياً منذ الخريف الحالي ويستمر حتى مايو 2027. وإن كنت تقصد إعصاراً مدارياً باسم محدد فلا أملك معلومات عن إعصار بهذا الاسم.</div>
+<div class='nc'><h3>الأثر المتوقع على عُمان</h3><small>المصدر: المركز الوطني للإنذار المبكر من المخاطر المتعددة (هيئة الطيران المدني)</small><ul><li><b>أكتوبر–نوفمبر:</b> أمطار فوق المعدل في شمال عُمان، وتحت المعدل على ساحل بحر العرب في أكتوبر.</li><li><b>ديسمبر:</b> قرب المعدل في معظم المناطق، وفوقه في الشمال.</li><li><b>الحرارة:</b> أعلى من المعتاد أكتوبر–ديسمبر، ولا يُعزى ذلك للنينو وحده.</li><li><b>أنظمة مدارية:</b> احتمال تشكّل أنظمة في بحر العرب أكتوبر–ديسمبر يبقى قائماً، ولا يُنسب للنينو وحده.</li><li><b>المخاطر:</b> أمطار غزيرة محتملة على جبال الحجر ومسندم وسيول.</li></ul>هذه توقعات موسمية لا تنبؤ بعواصف أو أيام بعينها.</div>
+<div class='nc'><h3>ما هو النينو؟</h3>ارتفاع غير معتاد في حرارة مياه وسط وشرق المحيط الهادئ الاستوائي مع ضعف الرياح التجارية. سمّاه صيادو بيرو «الطفل» لأنه يظهر قرب عيد الميلاد، ويتكرر كل 2–7 سنوات تقريباً.</div>
+<div class='nc src'><h3>الراصد: المصادر والتحديث</h3><ul><li>NOAA / CPC: نقاش ENSO الشهري، التالي <b>12 نوفمبر 2026</b>.</li><li>ASMC (آسيان): تحديث 16 أكتوبر 2026.</li><li>المركز الوطني للإنذار المبكر – هيئة الطيران المدني في عُمان (سبتمبر–أكتوبر 2026).</li></ul><small>الأرقام لحظة الجلب (20 أكتوبر 2026) وقد تتغير مع كل تحديث.</small></div>`}
+const openNino=()=>{if(!$('#nb').innerHTML)ninoBuild();$('#nino').classList.add('open');$('#nino').scrollTop=0;setTimeout(()=>ninoDraw(++nid),300)};
+$('#nx').onclick=()=>{$('#nino').classList.remove('open');nid++};
+let hist=[],busy=false,smp;
+const addMsg=(r,t)=>{const d=document.createElement('div');d.className='mb '+r;d.textContent=t;$('#am').appendChild(d);d.scrollIntoView({block:'end',behavior:'smooth'});return d};
+function aiCtx(){const c=cty(S[cur]);return JSON.stringify({المدينة:c.n,الدولة:c.co,بيانات_فعلية:!!c.real,درجة_الآن:Math.round(c.real?c.now:curve(c,lhr(c))),العظمى:c.hi,الصغرى:c.lo,الحالة:CN[c.c],احتمال_الهطول_اليوم:c.pc??'غير متوفر',الرياح_كمس:c.w??'غير متوفر',الرطوبة:c.hu??'غير متوفر',الشروق:c.sr,الغروب:c.ss,توقعات_الأيام:(c.days||[]).map(d=>c.real?{صغرى:d[0],عظمى:d[1],احتمال_هطول:d[2]}:{صغرى:d[0],عظمى:d[1]})})}
+$('#ach').innerHTML=['كم الحرارة الآن؟','هل يمطر بكرة؟','ماذا ألبس اليوم؟','أي مدينة الأحر اليوم؟','اشرح لي النينو','متى يتأثر طقس عُمان بالنينو؟'].map(s=>`<button>${s}</button>`).join('');
+$('#ach').onclick=e=>{if(e.target.tagName=='BUTTON')ask(e.target.textContent)};
+$('#aisend').onclick=()=>ask($('#aiq').value);$('#aiq').onkeydown=e=>{if(e.key=='Enter')ask($('#aiq').value)};
+const openAI=()=>{$('#ai').classList.add('open');aiInit()};$('#ax').onclick=()=>$('#ai').classList.remove('open');
+
+/* ===== v4: icons, settings, google, local assistant ===== */
+const PA={x:'M6 6l12 12M18 6L6 18',wave:'M2 9c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1M2 15c2.5-3 5-3 7.5 0s5 3 7.5 0 3.5-2 5-1',sparkle:'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z',pin:'M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',cal:'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',sun:'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8',sunset:'M3 19h18M7 19a5 5 0 0 1 10 0M12 7v4M5.5 11l1.5 1.5M18.5 11L17 12.5',wind:'M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8',drop:'M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z',therm:'M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0zM12 9v7',humid:'M12 3s5 5.5 5 9.5a5 5 0 0 1-10 0C7 8.5 12 3 12 3zM10 13a2 2 0 0 0 2 2',send:'M21 3L10 14M21 3l-7 18-4-7-7-4z',gear:'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z',user:'M20 21v-1a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v1M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',chev:'M15 5l-7 7 7 7',out:'M9 21H5V3h4M16 17l5-5-5-5M21 12H9'};
+const SV=(n,s=16)=>n=='g'?`<svg width='${s}' height='${s}' viewBox='0 0 24 24'><path fill='#4285F4' d='M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.6 5.6 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8z'/><path fill='#34A853' d='M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1.1.7-2.5 1.2-4 1.2-3.1 0-5.7-2.1-6.6-4.9H1.4v3.1A12 12 0 0 0 12 24z'/><path fill='#FBBC05' d='M5.4 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.4a12 12 0 0 0 0 10.8z'/><path fill='#EA4335' d='M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8z'/></svg>`:`<svg width='${s}' height='${s}' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' style='flex:none${n=='send'?';transform:scaleX(-1)':''}'><path d='${PA[n]}'/></svg>`;
+document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=SV(e.dataset.ic,+e.dataset.s||22));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function getUser(){try{return JSON.parse(localStorage.getItem('wx_user')||'null')}catch(e){return null}}
+function setUser(u){try{localStorage.setItem('wx_user',JSON.stringify(u))}catch(e){}}
+/* Google Sign-In: ضع معرّف العميل (Client ID) من Google Cloud Console هنا، وانشر الصفحة على نطاق مسجّل عندهم */
+const GOOGLE_CLIENT_ID='';
+function gMsg(t){const a=$('#er'),b=$('#gmsg');if(a)a.textContent=t;if(b)b.textContent=t}
+async function googleLogin(cb){
+ if(!GOOGLE_CLIENT_ID){gMsg('تسجيل الدخول عبر Google غير مفعّل بعد: يحتاج معرّف عميل (Client ID) من Google Cloud Console ونطاقاً مستضافاً مسجّلاً عندهم، ولا يمكن تشغيله داخل صفحة Claude المنشورة.');return}
+ try{
+  if(!(window.google&&google.accounts))await new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc)});
+  google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:r=>{try{const pl=JSON.parse(decodeURIComponent(escape(atob(r.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))));setUser({n:pl.name,e:pl.email,p:'google'});cb&&cb()}catch(x){gMsg('تعذّر قراءة بيانات الحساب.')}}});
+  google.accounts.id.prompt(n=>{if(n.isNotDisplayed&&n.isNotDisplayed())gMsg('تعذّر عرض نافذة Google (قد تكون محظورة في هذا المتصفح).')})
+ }catch(x){gMsg('تعذّر تحميل خدمة Google. تحقق من الاتصال.')}}
+function setBuild(){const u=getUser(),nm=u?(u.n||u.e||'ضيف'):'غير مسجّل',pv=!u?'لم تسجّل الدخول':u.p=='google'?'حساب Google':u.p=='local'?'حساب محلي على هذا الجهاز':'وضع الضيف';
+$('#stb').innerHTML=`<div class='nc'><div class='ac'><div class='av'>${u&&(u.n||u.e)?esc((u.n||u.e)[0].toUpperCase()):SV('user',26)}</div><div><b>${esc(nm)}</b><br><small>${pv}${u&&u.e&&u.n?' · '+esc(u.e):''}</small></div></div>${u&&u.p=='google'?'':`<button class='pb sec' id='sgg'>${SV('g',20)}<span style='margin-inline-start:8px'>تسجيل الدخول عبر Google</span></button>`}<div id='gmsg'></div></div>
+<div class='sg'>الأدوات</div><button class='sr' data-r='ai'>${SV('sparkle',22)}<span>المساعد الذكي</span>${SV('chev',18)}</button><button class='sr' data-r='nino'>${SV('wave',22)}<span>ظاهرة النينو</span>${SV('chev',18)}</button>
+${devOn()?`<button class='sr' data-r='dev'>${SV('gear',22)}<span>خيارات المطور</span>${SV('chev',18)}</button>`:''}<div class='sg'>عن البيانات</div><div class='nc' style='font-size:13px'>الطقس الفعلي لـ ${Object.keys(REAL).length} مدينة عُمانية (جُلب في 27 أكتوبر 2026)، والبقية تقديرية وتحمل علامة «تقديري». الشروق والغروب محسوبان فلكياً. لا توجد بيانات فعلية للرياح حالياً.</div>
+<div class='sg'>عن التطبيق</div><button class='sr' data-r='ver'><span>الإصدار</span><small style='opacity:.6'>4.0 (27)</small></button>
+<div class='sg'>الحساب</div><button class='sr' data-r='out'>${SV('out',22)}<span>${u?'تسجيل الخروج':'عرض شاشة الترحيب'}</span>${SV('chev',18)}</button>`}
+$('#setb').onclick=()=>{setBuild();$('#sets').classList.add('open')};
+$('#stx').onclick=()=>$('#sets').classList.remove('open');
+$('#stb').onclick=e=>{if(e.target.closest('#sgg')){googleLogin(setBuild);return}const r=e.target.closest('[data-r]');if(!r)return;const k=r.dataset.r;
+ if(k=='ai')openAI();else if(k=='nino')openNino();else if(k=='dev')openDev();else if(k=='ver')verTap();else if(k=='out'){try{localStorage.removeItem('wx_user');localStorage.removeItem('wx_ob')}catch(x){}$('#sets').classList.remove('open');ob.classList.remove('off');go(1)}};
+/* --- المساعد المحلي: يعمل بدون Claude --- */
+const DAYS=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const dl=i=>i==0?'اليوم':i==1?'بكرة':DAYS[(new Date().getDay()+i)%7];
+const nrm=t=>String(t).toLowerCase().replace(/[\u064B-\u065F\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ئ/g,'ي').replace(/ؤ/g,'و').replace(/[\u0660-\u0669]/g,d=>d.charCodeAt(0)-1632).replace(/[؟?!.,،؛:"'()]/g,' ').replace(/\s+/g,' ').trim();
+const NIN={
+ what:'النينو ارتفاع غير معتاد في حرارة مياه وسط وشرق المحيط الهادئ الاستوائي مع ضعف الرياح التجارية، وهذا يغيّر دورة الغلاف الجوي. ليس عاصفة ولا يتحرك بمسار، ويتكرر كل 2–7 سنوات تقريباً.',
+ now:'الحالة الآن (NOAA، 8 أكتوبر 2026): إنذار النينو ساري وهو يزداد قوة، ويُرجَّح أن يصبح قوياً إلى قوي جداً حتى يناير–مارس 2027 باحتمال أكثر من 83%. مؤشر Niño‑3.4 عند +2.1° وNiño‑3 عند +3.0° وNiño‑1+2 عند +3.9°.',
+ when:'لا يوجد «موعد وصول» لأن النينو لا يسافر نحونا؛ أثره يصل عبر الغلاف الجوي وبدأ تدريجياً من هذا الخريف. ذروته المتوقعة نوفمبر–ديسمبر 2026، ثم يبدأ بالضعف من يناير–فبراير 2027، وتأثيره على أمطار عُمان يمتد حتى مايو 2027.',
+ oman:'على عُمان (المركز الوطني للإنذار المبكر): أمطار فوق المعدل في الشمال أكتوبر–نوفمبر وتحت المعدل على ساحل بحر العرب في أكتوبر، وديسمبر قرب المعدل عدا الشمال. تاريخياً (1980–2025) زادت الأمطار في سنوات النينو بنحو 20% (سبتمبر–نوفمبر) و31% (ديسمبر–فبراير) و54% (مارس–مايو). الحرارة أعلى من المعتاد حتى ديسمبر، مع خطر أمطار غزيرة وسيول على الحجر ومسندم.',
+ num:'فرصة حدث تاريخي يفوق كل ما سُجّل منذ 1950 (متوسط 3 أشهر ≥ +2.5° وفق RONI): 54% لسبتمبر–نوفمبر، 83% لأكتوبر–ديسمبر، 70% لنوفمبر–يناير. التحديث القادم من NOAA في 12 نوفمبر 2026.'};
+function ninoAns(q){const o=[];
+ if(/متي|وقت|يوصل|وصل|ياتي|يجي|يقترب|موعد/.test(q))o.push(NIN.when);
+ if(/عمان|تاثير|تاثر|يتاثر|امطار|مطر|طقس|الخليج|المنطقه|سيول/.test(q))o.push(NIN.oman);
+ if(/رقم|ارقام|احتمال|قوي|قوه|شده|درجه|مؤشر|تاريخي/.test(q))o.push(NIN.num,NIN.now);
+ if(!o.length&&/ما هو|ماهو|ايش|وش|شنو|ماذا|اشرح|يعني|تعريف|بسيط/.test(q))o.push(NIN.what);
+ if(!o.length)o.push(NIN.now,NIN.what,'اسأل أيضاً: «متى يصل؟» أو «تأثيره على عُمان».');
+ return o.join('\n\n')}
+function cityOf(q){let b=null,bl=0;for(const d of D){const n=nrm(d.n).replace(/^ال/,'');if(n.length<2)continue;const re=new RegExp('(^| )(و|ف)?(بال|لل|ال|ب|ل)?'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'( |$)');if(re.test(q)&&n.length>bl){b=d;bl=n.length}}return b}
+function dayOf(q){if(/بعد (بكره|بكرا|غد)/.test(q))return 2;if(/بكره|بكرا|غدا|غد|باكر/.test(q))return 1;if(/اليوم|الحين|الان|حاليا/.test(q))return 0;const nm=['احد','اثنين','ثلاثاء','اربعاء','خميس','جمعه','سبت'];for(let k=0;k<7;k++)if(q.includes(nm[k]))return(k-new Date().getDay()+7)%7;return null}
+let lastT=null;
+function localAns(raw){const q=nrm(raw);
+ if(/اعصار|اعاصير|عاصفه|عواصف|سايكلون|cyclone/.test(q))return'ما عندي بيانات تتبّع لحظية للأعاصير أو العواصف. المركز الوطني للإنذار المبكر في عُمان يذكر أن احتمال تشكّل أنظمة مدارية في بحر العرب خلال أكتوبر–ديسمبر قائم (ولا يُنسب للنينو وحده). للتنبيهات الرسمية تابع نشرات هيئة الطيران المدني.';
+ if(/نينو|نينيو|nino/.test(q))return ninoAns(q);
+ if(/^(مرحبا|اهلا|هلا|السلام|صباح|مساء|هاي|hi|hello)/.test(q))return'هلا فيك! اسألني عن حرارة أي مدينة، المطر، الشروق والغروب، ماذا تلبس، أو عن النينو.';
+ if(/شكرا|مشكور|يعطيك العافيه|تسلم/.test(q))return'العفو، في أي وقت.';
+ if(/من انت|مين انت|ماذا تفعل|شنو تسوي|وش تسوي|ايش تسوي|ماذا تستطيع|ساعدني|مساعده/.test(q))return'أنا مساعد الطقس داخل التطبيق. أجيب عن الحرارة والأمطار والشروق والغروب واللبس ومقارنة المدن وظاهرة النينو من بيانات التطبيق فقط، ولا أخترع أرقاماً.';
+ const cc=cityOf(q),di=dayOf(q),c=cc||cty(S[cur]);
+ let T=/احر|اسخن|ابرد/.test(q)?'xt':/(اكثر|اعلي).*(مطر|امطار)|(مطر|امطار).*(اكثر|اعلي)|(وين|اين|اي مدينه).*(مطر|امطار|يمطر)/.test(q)?'xr':/البس|لبس|ملابس|ارتدي/.test(q)?'cl':/(^| )uv( |$)|بنفسجي|اشعه/.test(q)?'uv':/شروق|غروب|تشرق|تغرب|الشمس/.test(q)?'sun':/رطوب/.test(q)?'hu':/رياح|ريح|هبوب|هواء/.test(q)?'wd':/مطر|امطار|ممطر|تمطر|يمطر|هطول|سيول|رعد|برق/.test(q)?'rn':/اسبوع|ايام|قادمه|توقعات/.test(q)?'wk':/حراره|درجه|كم |حار|بارد|برد|سخون|ساخن|احساس/.test(q)?'tp':/طقس|جو|غيم|غيوم|صحو|مشمس|غائم|سحب|حاله/.test(q)?'gn':null;
+ if(!T){if(cc||di!=null)T=lastT||'gn';else return'ما فهمت سؤالك بالضبط. أقدر أجاوب عن: الحرارة، الأمطار، الشروق والغروب، ماذا تلبس، مقارنة المدن، وظاهرة النينو. جرّب مثلاً: «هل يمطر في صلالة بكرة؟»'}
+ lastT=T;
+ const real=!!c.real,days=real?c.days:null,nm=c.n,lh=lhr(c),nowT=real?Math.round(c.now):Math.round(curve(c,lh)),est=real?'':`\n(بيانات ${nm} تقديرية وليست فعلية.)`,d0=di||0,dd=days&&days[d0];
+ const realList=Object.keys(REAL).map(id=>cty(id).n).join('، ');
+ if(di&&!dd&&T!='xt'&&T!='xr')return`ما عندي توقع فعلي في ${nm} لـ«${dl(di)}»${real?` (توقعاتي تغطي ${days.length} أيام فقط)`:' لأن بياناتها تقديرية'}. المتاح: الحالة الآن ${nowT}° والعظمى ${c.hi}°. المدن ذات البيانات الفعلية: ${realList}.`;
+ switch(T){
+  case'xt':{const asc=/ابرد/.test(q),r=D.filter(d=>d.real).sort((a,b)=>asc?a.hi-b.hi:b.hi-a.hi).slice(0,3);return(asc?'الأبرد':'الأحر')+' اليوم بين مدن البيانات الفعلية: '+r.map(d=>`${d.n} (عظمى ${d.hi}°)`).join('، ')+'.'}
+  case'xr':{const r=D.filter(d=>d.real&&d.pc!=null).sort((a,b)=>b.pc-a.pc);return r[0].pc<10?'لا يُتوقع هطول اليوم في المدن ذات البيانات الفعلية (أعلى احتمال '+r[0].pc+'%).':'أعلى احتمال هطول اليوم: '+r.slice(0,3).map(d=>`${d.n} ${d.pc}%`).join('، ')+'.'}
+  case'rn':{if(!real)return`ما عندي احتمال هطول فعلي لـ${nm} لأن بياناتها تقديرية (الحالة المعروضة: ${CN[c.c]}). المدن ذات البيانات الفعلية: ${realList}.`;
+   if(di!=null){const p=dd[2];return`${dl(d0)} في ${nm}: احتمال الهطول ${p}%. ${p>=50?'الاحتمال مرتفع، خذ احتياطك.':p>=20?'احتمال ضعيف إلى متوسط.':'احتمال ضعيف.'}`}
+   const w=days.map((d,i)=>[i,d[2]]).filter(x=>x[1]>=30);return w.length?`أعلى احتمالات الهطول في ${nm}: `+w.map(x=>`${dl(x[0])} ${x[1]}%`).join('، ')+'.':`احتمال الهطول في ${nm} منخفض خلال الأيام القادمة (أعلى قيمة ${Math.max(...days.map(d=>d[2]))}%).`}
+  case'cl':{const h=dd?dd[1]:c.hi,pp=real?(dd?dd[2]:c.pc):0;return`${dl(d0)} في ${nm} العظمى ${h}°. `+(h>=38?'الجو حار جداً: ملابس قطنية فاتحة وخفيفة، وماء كثير، وتجنّب الشمس بين 11 والثالثة.':h>=32?'الجو حار: ملابس خفيفة وفاتحة، ولا تنسَ الماء وواقي الشمس.':h>=25?'الجو معتدل إلى دافئ: ملابس خفيفة عادية تكفي.':h>=17?'الجو لطيف إلى بارد قليلاً: خذ جاكيت خفيف.':'الجو بارد: ملابس ثقيلة وجاكيت.')+(pp>=40?' واحتمال الهطول مرتفع، فخذ مظلة.':'')+est}
+  case'uv':return c.uv==null?`ما عندي بيانات فعلية للأشعة فوق البنفسجية في ${nm}.`:`الأشعة فوق البنفسجية في ${nm} ${c.uv} (${c.uv>=11?'شديدة':c.uv>=8?'عالية جداً':c.uv>=6?'عالية':c.uv>=3?'متوسطة':'منخفضة'}).${est}`;
+  case'sun':return`الشروق في ${nm} ${c.sr} والغروب ${c.ss} (بتوقيت المدينة).${est}`;
+  case'hu':return c.hu==null?`ما عندي بيانات فعلية للرطوبة في ${nm}.`:`الرطوبة في ${nm} ${c.hu}%.${est}`;
+  case'wd':return c.w==null?`ما عندي بيانات فعلية للرياح في ${nm}؛ لا يوجد مصدر رياح فعلي في التطبيق حالياً.`:`سرعة الرياح في ${nm} ${c.w} كم/س.${est}`;
+  case'wk':return days?`توقعات ${nm}:\n`+days.map((d,i)=>`${dl(i)}: ${d[0]}–${d[1]}° (هطول ${d[2]}%)`).join('\n'):`ما عندي توقعات أيام فعلية لـ${nm}. اليوم: ${c.lo}–${c.hi}°.${est}`;
+  case'tp':return dd&&di?`${dl(d0)} في ${nm}: صغرى ${dd[0]}° وعظمى ${dd[1]}°.`:`الآن في ${nm} ${nowT}° والحالة ${CN[c.c]}. العظمى ${c.hi}° والصغرى ${c.lo}°${c.fl!=null?`، والإحساس الحراري ${c.fl}°`:''}.${est}`;
+  default:return dd&&di?`${dl(d0)} في ${nm}: ${dd[0]}–${dd[1]}° واحتمال الهطول ${dd[2]}%.`:`الآن في ${nm} ${nowT}° والحالة ${CN[c.c]}. العظمى ${c.hi}° والصغرى ${c.lo}°${real?`. احتمال الهطول اليوم ${c.pc}%`:''}. الشروق ${c.sr} والغروب ${c.ss}.${est}`}}
+const typeIn=(el,t)=>new Promise(ok=>{let i=0;const st2=()=>{i=Math.min(t.length,i+3);el.textContent=t.slice(0,i);el.scrollIntoView({block:'end'});i<t.length?setTimeout(st2,16):ok()};st2()});
+/* ===== iOS 27 Weather: Highlights + Conditions tabs + landscape ===== */
+/* ===== وضع المطور + محاكاة الطقس ===== */
+PA.lock='M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3';
+try{DV.dev=localStorage.getItem('wx_dev')=='1';DV.exp=localStorage.getItem('wx_exp')=='1'}catch(e){}
+const devOn=()=>DV.dev;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2200)}
+const DEVCODES=['YAS7','EY7AS'];
+let vt=0,vtT=0,devFail=0,devLock=0;
+function verTap(){if(devOn()){toast('وضع المطور مفعّل مسبقاً');return}
+ const n=Date.now();if(n-vtT>2500)vt=0;vtT=n;vt++;
+ if(vt>=6){vt=0;DV.dev=true;try{localStorage.setItem('wx_dev','1')}catch(e){}toast('أصبحت الآن في وضع المطور');setBuild()}
+ else if(vt>=3)toast('أنت على وشك دخول وضع المطور: بقي '+(6-vt)+(6-vt==1?' ضغطة':' ضغطات'))}
+function devBadge(){const b=$('#devb'),a=DV.c||DV.n!=null;b.hidden=!a;if(a)b.textContent='وضع تجريبي'+(DV.c?' · '+CN[DV.c]:DV.n!=null?(DV.n?' · ليل':' · نهار'):'')+' (اضغط للإلغاء)'}
+function devReset(){DV.c=null;DV.n=null;render(cur);devBadge()}
+$('#devb').onclick=()=>{devReset();if($('#dev').classList.contains('open'))devBuild()};
+function devBuild(){const ex=DV.exp;
+ $('#devb2').innerHTML=`<div class='nc'><h3>${SV('lock',18)} الوضع التجريبي</h3><small>يتيح لك تغيير الطقس المعروض لتجربة الشاشة والخلفيات والحركة. لا يغيّر البيانات الحقيقية، ويعود كل شيء طبيعياً عند إعادة تحميل الصفحة.</small>
+${ex?`<button class='pb sec' id='expoff' style='margin-top:10px'>إيقاف الوضع التجريبي</button>`:`<div class='lockrow'><input id='expc' type='password' placeholder='كلمة السر' autocomplete='off' autocapitalize='characters'><button id='expgo'>فتح</button></div><div id='expm' class='gmsgx'></div>`}</div>
+<div class='nc ${ex?'':'dis'}'><h3>الحالة الجوية</h3><div class='cg'>${[['clear','مشمس'],['pcloudy','غائم جزئياً'],['cloudy','غائم'],['rain','مطر'],['storm','رعد'],['snow','ثلج']].map(([k,l])=>`<button data-cd='${k}' class='${DV.c==k?'on':''}'>${ic(k,28,false)}<span>${l}</span></button>`).join('')}</div>
+<h3 style='margin-top:14px'>الوقت</h3><div class='t3' id='tn' style='margin-top:8px;margin-bottom:0'>${[['a','تلقائي',DV.n==null],['d','نهار',DV.n===false],['n','ليل',DV.n===true]].map(([k,l,o])=>`<button data-n='${k}' class='${o?'on':''}'>${l}</button>`).join('')}</div>
+<button class='pb sec' id='devrst' style='margin-top:14px'>العودة للطقس الحقيقي</button></div>
+<div class='nc'><button class='pb sec' id='devoff'>إيقاف وضع المطور</button><small>يُخفي هذه الخيارات حتى تفعّلها من جديد بالضغط على «الإصدار» 6 مرات.</small></div>
+<div class='nc' style='text-align:center;font-size:13px'>هذا التطبيق صُمّم بواسطة <b>YAS7</b></div>`}
+const openDev=()=>{devBuild();$('#dev').classList.add('open')};
+$('#dvx').onclick=()=>$('#dev').classList.remove('open');
+function devTry(){const m=$('#expm'),now=Date.now();if(now<devLock){m.textContent='محاولات كثيرة، انتظر قليلاً.';return}
+ const v=($('#expc').value||'').trim().toUpperCase();
+ if(DEVCODES.includes(v)){DV.exp=true;devFail=0;try{localStorage.setItem('wx_exp','1')}catch(e){}toast('تم فتح الوضع التجريبي');devBuild()}
+ else{devFail++;if(devFail>=5){devLock=now+30000;devFail=0;m.textContent='محاولات كثيرة، انتظر 30 ثانية.'}else m.textContent='كلمة السر غير صحيحة.'}}
+$('#devb2').addEventListener('click',e=>{
+ if(e.target.closest('#expgo'))return devTry();
+ if(e.target.closest('#expoff')){DV.exp=false;try{localStorage.removeItem('wx_exp')}catch(x){}devReset();return devBuild()}
+ if(e.target.closest('#devrst')){devReset();return devBuild()}
+ if(e.target.closest('#devoff')){DV.dev=false;DV.exp=false;try{localStorage.removeItem('wx_dev');localStorage.removeItem('wx_exp')}catch(x){}devReset();$('#dev').classList.remove('open');setBuild();return}
+ if(!DV.exp)return;
+ const c=e.target.closest('[data-cd]');if(c){DV.c=DV.c==c.dataset.cd?null:c.dataset.cd;render(cur);devBadge();return devBuild()}
+ const n=e.target.closest('#tn [data-n]');if(n){DV.n=n.dataset.n=='a'?null:n.dataset.n=='n';render(cur);devBadge();devBuild()}});
+$('#devb2').addEventListener('keydown',e=>{if(e.key=='Enter'&&e.target.id=='expc')devTry()});
+/* --- مطر / ثلج / رعد --- */
+const fxc=$('#fx'),fxx=fxc.getContext('2d'),FX={k:null,ps:[],w:0,h:0,nl:0,bolt:null,last:0};
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fxSeed(){const w=FX.w<500,k=FX.k,n=k=='rain'?(w?110:170):k=='storm'?(w?190:280):k=='snow'?(w?90:130):0;FX.ps=Array.from({length:n},()=>({x:Math.random()*(FX.w+300)-150,y:Math.random()*FX.h,z:.5+Math.random()*.9,r:Math.random()*6.28}))}
+function fxSize(){const d=Math.min(2,devicePixelRatio||1);FX.w=innerWidth;FX.h=innerHeight;fxc.width=FX.w*d;fxc.height=FX.h*d;fxx.setTransform(d,0,0,d,0,0);if(FX.k)fxSeed()}
+addEventListener('resize',fxSize);
+function flash(){const f=$('#flash');f.style.transition='none';f.style.opacity=.5;setTimeout(()=>{f.style.transition='opacity .3s';f.style.opacity=0},70);setTimeout(()=>{f.style.transition='none';f.style.opacity=.3},190);setTimeout(()=>{f.style.transition='opacity .6s';f.style.opacity=0},260)}
+function fxSet(k){const on=k=='rain'||k=='snow'||k=='storm',was=!!FX.k;if(!FX.w)fxSize();FX.k=on?k:null;
+ if(!on){fxx.clearRect(0,0,FX.w,FX.h);FX.bolt=null;return}
+ fxSeed();FX.nl=performance.now()+2500;FX.last=performance.now();if(!was)requestAnimationFrame(fxLoop)}
+function fxLoop(t){if(!FX.k)return;requestAnimationFrame(fxLoop);const dt=Math.min(.05,(t-FX.last)/1000||.016);FX.last=t;fxx.clearRect(0,0,FX.w,FX.h);const k=FX.k;
+ if(k=='snow'){fxx.fillStyle='#fff';for(const p of FX.ps){p.y+=(40+60*p.z)*dt;p.r+=dt*.8;p.x+=Math.sin(p.r)*18*dt;if(p.y>FX.h+5){p.y=-5;p.x=Math.random()*(FX.w+300)-150}fxx.globalAlpha=.25+.4*p.z/1.4;fxx.beginPath();fxx.arc(p.x,p.y,.8+p.z*1.6,0,7);fxx.fill()}fxx.globalAlpha=1;return}
+ const sp=k=='storm'?1500:1100,wx=k=='storm'?.25:.12;fxx.lineCap='round';
+ for(const p of FX.ps){const len=10+14*p.z;fxx.strokeStyle=`rgba(205,222,245,${.12+.25*p.z/1.4})`;fxx.lineWidth=.8+.5*p.z;fxx.beginPath();fxx.moveTo(p.x,p.y);fxx.lineTo(p.x+len*wx,p.y+len);fxx.stroke();p.y+=sp*p.z*dt;p.x+=sp*wx*p.z*dt;if(p.y>FX.h+20){p.y=-30;p.x=Math.random()*(FX.w+300)-150}}
+ if(k=='storm'&&!RM){if(t>FX.nl){FX.nl=t+3500+Math.random()*6000;const pts=[];let x=FX.w*(.15+Math.random()*.7),y=0;while(y<FX.h*.55){pts.push([x,y]);x+=(Math.random()-.5)*60;y+=25+Math.random()*35}FX.bolt={pts,t0:t};flash()}
+  if(FX.bolt){const a=1-(t-FX.bolt.t0)/300;if(a<=0)FX.bolt=null;else{fxx.save();fxx.strokeStyle=`rgba(235,242,255,${a})`;fxx.lineWidth=2.6;fxx.shadowColor='rgba(180,200,255,.9)';fxx.shadowBlur=14;fxx.beginPath();FX.bolt.pts.forEach(([x,y],i)=>i?fxx.lineTo(x,y):fxx.moveTo(x,y));fxx.stroke();fxx.restore()}}}}
+/* ===== بطاقات لكل المدن + القمر ===== */
+PA.moon='M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z';
+const tgs=(c,f)=>{const v=c[f],t=v==null?(f=='uv'&&REAL[c.id]?'تقديري':'غير متوفر'):(c.id=='mct'?'بيانات 14 أكتوبر':'تقديري');return`<small style="opacity:.65;font-weight:400;margin-inline-start:6px">${t}</small>`};
+function uvCalc(c,lh){const r=REAL[c.id];if(!r)return null;const n=new Date(),N=Math.floor((Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())-Date.UTC(n.getUTCFullYear(),0,0))/864e5),lat=r.ll[1]*Math.PI/180,dec=-23.44*Math.PI/180*Math.cos(2*Math.PI/365*(N+10)),sn=(tm(c.sr)+tm(c.ss))/2,H=(lh-sn)*15*Math.PI/180,mu=Math.sin(lat)*Math.sin(dec)+Math.cos(lat)*Math.cos(dec)*Math.cos(H);return mu<=0?0:12.5*Math.pow(mu,2.42)}
+function uvCard(c,lh){const e=c.uv==null,u=e?uvCalc(c,lh):c.uv;if(u==null)return`<div class="big">—</div><div class="cap">لا يتوفر مصدر للأشعة فوق البنفسجية في هذه المدينة.</div>`;const r=Math.round(u),l=r<3?'منخفض':r<6?'متوسط':r<8?'مرتفع':r<11?'مرتفع جداً':'شديد';return`<div class="big">${r}</div><div style="font-weight:600;font-size:18px">${l}</div><div class="bar"><i style="left:${Math.min(100,r/11*100)}%"></i></div><div class="cap">${e?'لسماء صافية. ':''}${r>=6?'استخدم واقي الشمس.':'مستوى معتدل.'}</div>`}
+function moonAlt(ms,lat,lon){const R=Math.PI/180,d=ms/864e5+2440587.5-2451545,L=R*(218.316+13.176396*d),M=R*(134.963+13.064993*d),F=R*(93.272+13.22935*d),l=L+R*6.289*Math.sin(M),b=R*5.128*Math.sin(F),e=R*(23.4393-3.563e-7*d),ra=Math.atan2(Math.sin(l)*Math.cos(e)-Math.tan(b)*Math.sin(e),Math.cos(l)),dec=Math.asin(Math.sin(b)*Math.cos(e)+Math.cos(b)*Math.sin(e)*Math.sin(l)),H=R*(280.16+360.9856235*d)+R*lon-ra,la=R*lat;return Math.asin(Math.sin(la)*Math.sin(dec)+Math.cos(la)*Math.cos(dec)*Math.cos(H))/R}
+function moonInfo(c){const SY=29.530588853,jd=Date.now()/864e5+2440587.5,p=(((jd-2451550.1)/SY)%1+1)%1,nm=p<.03||p>.97?'محاق':p<.22?'هلال متزايد':p<.28?'تربيع أول':p<.47?'أحدب متزايد':p<.53?'بدر':p<.72?'أحدب متناقص':p<.78?'تربيع أخير':'هلال متناقص';
+ const o={p,name:nm,age:(p*SY).toFixed(1),ill:Math.round((1-Math.cos(2*Math.PI*p))/2*100),full:Math.round(((.5-p+1)%1)*SY),nw:Math.round((1-p)*SY)};
+ const r=REAL[c.id];if(r&&c.tz!=null){const n=new Date(Date.now()+c.tz*36e5),mid=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())-c.tz*36e5,h0=.133;let ev=[],pa=moonAlt(mid,r.ll[1],r.ll[0]);for(let i=1;i<=216;i++){const a=moonAlt(mid+i*6e5,r.ll[1],r.ll[0]);if(pa<h0&&a>=h0)ev.push(['u',(i-1+(h0-pa)/(a-pa))/6]);if(pa>=h0&&a<h0)ev.push(['d',(i-1+(pa-h0)/(pa-a))/6]);pa=a}
+  const ru=ev.find(x=>x[0]=='u'&&x[1]<24),sd=ev.find(x=>x[0]=='d'&&(!ru||x[1]>ru[1]));o.rise=ru?ru[1]:null;o.set=sd?sd[1]:null;o.has=true}
+ return o}
+function moonSvg(p){const r=26,cx=30,cy=30,t=Math.cos(2*Math.PI*p),rx=(r*Math.abs(t)).toFixed(2),d=p<.5?`M${cx} ${cy-r}A${r} ${r} 0 0 1 ${cx} ${cy+r}A${rx} ${r} 0 0 ${t>0?0:1} ${cx} ${cy-r}Z`:`M${cx} ${cy-r}A${r} ${r} 0 0 0 ${cx} ${cy+r}A${rx} ${r} 0 0 ${t>0?1:0} ${cx} ${cy-r}Z`;
+ return`<svg width="76" height="76" viewBox="0 0 60 60" style="flex:none"><circle cx="30" cy="30" r="26" fill="#2b3142"/><path d="${d}" fill="#f4f1e4"/><circle cx="30" cy="30" r="26" fill="none" stroke="rgba(255,255,255,.35)"/></svg>`}
+function moonCard(c,lh){const m=moonInfo(c),fm=t=>f12(t%24)+(t>=24?' (بكرة)':'');let rs='';
+ if(m.has){rs=`<div>طلوع القمر ${m.rise!=null?fm(m.rise):'لا يطلع اليوم'} · غروبه ${m.set!=null?fm(m.set):'—'}</div>`;if(m.rise!=null&&m.set!=null){const du=m.set-m.rise;rs+=`<div>مدة بقائه في السماء ${Math.floor(du)} س ${Math.round((du%1)*60)} د</div>`}}
+ else rs=`<div style="opacity:.7">الطلوع والغروب غير متوفرين لهذه المدينة.</div>`;
+ return`<div class="glass" style="--i:8;grid-column:1/-1;height:auto"><div class="ct">${SV('moon',15)} القمر<small style="opacity:.65;font-weight:400;margin-inline-start:6px">حساب فلكي تقريبي</small></div><div style="display:flex;gap:16px;align-items:center">${moonSvg(m.p)}<div style="flex:1;line-height:1.7"><div style="font-size:22px;font-weight:600">${m.name}</div><div>الإضاءة ${m.ill}% · عمر القمر ${m.age} يوم</div>${rs}<div class="cap">البدر القادم بعد نحو ${m.full} يوم · المحاق بعد نحو ${m.nw} يوم</div></div></div></div>`}
+/* ===== شاشات تفاصيل البطاقات (مثل أبل) ===== */
+const cdN=(h,t)=>`<div class='nc'><h3>${h}</h3>${t}</div>`;
+const cdNo=t=>cdN('غير متوفر',`<div class='nodata'>${t}</div>`);
+const cdScale=(v,max,cols,labs)=>`<div class='scl'>${cols.map(c=>`<i style='background:${c}'></i>`).join('')}<div class='scm' style='left:${Math.max(0,Math.min(100,v/max*100))}%'></div></div><div style='display:flex;direction:ltr;justify-content:space-between;font-size:11px;opacity:.7'>${labs.map(l=>`<span>${l}</span>`).join('')}</div>`;
+function cdUv(c,lh){const e=c.uv==null,u=e?uvCalc(c,lh):c.uv;if(u==null)return['الأشعة فوق البنفسجية',cdNo('لا يتوفر مصدر للأشعة فوق البنفسجية في هذه المدينة.')];
+ const r=Math.round(u),l=r<3?'منخفض':r<6?'متوسط':r<8?'مرتفع':r<11?'مرتفع جداً':'شديد',adv=r<3?'لا حاجة لاحتياطات خاصة لمعظم الناس.':r<6?'يُنصح بالظل في الظهيرة ونظارة شمسية.':r<8?'استخدم واقي الشمس وقبعة، وتجنب الشمس المباشرة بين 11 والثالثة.':r<11?'واقي الشمس ضروري، والأفضل البقاء في الظل وقت الذروة.':'تجنب التعرض المباشر؛ الحروق تحدث خلال دقائق.';
+ let ch='';if(REAL[c.id]){const a=tm(c.sr),b=tm(c.ss),pts=[];for(let h=a;h<=b;h+=.25)pts.push([(h-a)/(b-a)*300+10,115-uvCalc(c,h)/12*100]);const nx=(lh-a)/(b-a)*300+10;ch=cdN('منحنى اليوم (تقدير لسماء صافية)',`<svg viewBox='0 0 320 130' style='width:100%;direction:ltr'><path d='M${pts.map(p=>p.join(' ')).join('L')}' fill='none' stroke='#ffb340' stroke-width='2.5' stroke-linecap='round'/><line x1='10' y1='115' x2='310' y2='115' stroke='rgba(255,255,255,.3)'/>${lh>=a&&lh<=b?`<circle cx='${nx}' cy='${115-u/12*100}' r='5' fill='#fff'/>`:''}<text x='10' y='128' fill='#fff' opacity='.7' font-size='10'>${f12(a)}</text><text x='310' y='128' fill='#fff' opacity='.7' font-size='10' text-anchor='end'>${f12(b)}</text></svg><small>الغيوم تخفّض القيم الفعلية.</small>`)}
+ return['الأشعة فوق البنفسجية',cdN('الآن',`<div class='cdv'>${r}</div><div class='cdl'>${l}</div>${cdScale(u,12,['#34c759','#ffd60a','#ff9f0a','#ff453a','#bf5af2'],['0','3','6','8','11+'])}<div style='margin-top:8px'>${adv}</div>${e?'<small>القيمة تقديرية لسماء صافية وليست قياساً فعلياً.</small>':c.id=='mct'?'<small>مصدرها بيانات 14 أكتوبر.</small>':''}`)+ch+cdN('ما هو مؤشر UV؟','يقيس شدة الأشعة فوق البنفسجية القادمة من الشمس والمسببة لحروق الجلد. يرتفع كلما ارتفعت الشمس في السماء، لذلك يبلغ ذروته قرب الظهر، ويقل مع الغيوم.')]}
+function cdSun(c,lh){const a=tm(c.sr),b=tm(c.ss),len=b-a,rem=lh<a?null:lh>b?0:b-lh,hm=x=>Math.floor(x)+' س '+Math.round((x%1)*60)+' د',pr=Math.max(0,Math.min(1,(lh-a)/len)),x=10+pr*300,y=100-Math.sin(pr*Math.PI)*80;
+ return['الشروق والغروب',cdN('اليوم',`<div class='cdv' style='font-size:44px'>${f12(b)}</div><div class='cdl'>الغروب</div><svg viewBox='0 0 320 120' style='width:100%;transform:scaleX(-1)'><path d='M10 100Q160 -40 310 100' fill='none' stroke='rgba(255,255,255,.35)' stroke-width='2' stroke-dasharray='2 4'/><line x1='0' y1='100' x2='320' y2='100' stroke='rgba(255,255,255,.4)'/><circle cx='${x}' cy='${y}' r='7' fill='${pr>0&&pr<1?'#ffd60a':'#8e8e93'}'/></svg><table class='tbl'><tr><td>الشروق</td><td>${f12(a)}</td></tr><tr><td>الغروب</td><td>${f12(b)}</td></tr><tr><td>الظهر الشمسي</td><td>${f12((a+b)/2)}</td></tr><tr><td>طول النهار</td><td>${hm(len)}</td></tr>${rem!=null?`<tr><td>المتبقي من النهار</td><td>${rem?hm(rem):'انتهى'}</td></tr>`:''}</table>${c.real?'<small>محسوب فلكياً لموقع المدينة.</small>':'<small>قيم تقديرية لهذه المدينة.</small>'}`)]}
+function cdWind(c){if(c.w==null)return['الرياح',cdNo('لا يتوفر مصدر رياح فعلي لهذه المدينة.')];const B=[[0,6,'هادئ'],[6,20,'نسيم خفيف'],[20,39,'رياح معتدلة'],[39,62,'رياح قوية'],[62,89,'عاصفة'],[89,999,'عاصفة شديدة']],k=B.findIndex(x=>c.w>=x[0]&&c.w<x[1]);
+ return['الرياح',cdN('الآن',`<div class='cdv'>${c.w}<small style='font-size:20px'> كم/س</small></div><div class='cdl'>${B[k][2]}${c.wd!=null?' · من اتجاه '+dir(c.wd):''}</div><small>${c.id=='mct'?'بيانات 14 أكتوبر':'قيمة تقديرية'}.</small>`)+cdN('تصنيف سرعة الرياح',`<table class='tbl'>${B.map((x,i)=>`<tr class='${i==k?'on':''}'><td>${x[2]}</td><td>${x[0]}${x[1]<999?'–'+(x[1]-1):'+'} كم/س</td></tr>`).join('')}</table>`)]}
+function cdHum(c){if(c.hu==null)return['الرطوبة',cdNo('لا يتوفر مصدر للرطوبة في هذه المدينة.')];const t=c.real?c.now:c.hi,dw=Math.round(t-(100-c.hu)/5),l=c.hu<30?'جاف':c.hu<60?'مريح':c.hu<70?'رطب قليلاً':'رطب';
+ return['الرطوبة',cdN('الآن',`<div class='cdv'>${c.hu}%</div><div class='cdl'>${l}</div>${cdScale(c.hu,100,['#ffd60a','#34c759','#64d2ff','#0a84ff'],['0','30','60','100%'])}<div style='margin-top:8px'>نقطة الندى نحو ${dw}°.</div><small>${c.id=='mct'?'بيانات 14 أكتوبر':'قيمة تقديرية'}.</small>`)+cdN('ما معنى الرطوبة؟','هي نسبة بخار الماء في الهواء مقارنةً بأقصى ما يحمله عند هذه الحرارة. كلما ارتفعت مع الحرارة شعرت بالجو أثقل لأن العرق يتبخر ببطء.')]}
+function cdFeel(c){if(c.fl==null)return['الإحساس الحراري',cdNo('لا يتوفر مصدر للإحساس الحراري في هذه المدينة.')];const t=c.real?Math.round(c.now):c.hi,d=c.fl-t;
+ return['الإحساس الحراري',cdN('عند ذروة الحرارة',`<div class='cdv'>${c.fl}°</div><div class='cdl'>${d>=2?'أدفأ من الفعلية بـ'+d+'°':d<=-2?'أبرد من الفعلية بـ'+(-d)+'°':'قريب من الفعلية'}</div><small>${c.id=='mct'?'بيانات 14 أكتوبر':'قيمة تقديرية'}.</small>`)+cdN('كيف يُحسب؟','يجمع بين الحرارة والرطوبة والرياح: الرطوبة العالية تجعل الجو أدفأ، والرياح القوية تبرّده.')]}
+function cdRain(c){if(c.pc==null)return['الهطول',cdNo('لا يوجد مصدر هطول فعلي لهذه المدينة.')];const days=c.days||[];
+ return['الهطول',cdN('اليوم',`<div class='cdv'>${c.pc}%</div><div class='cdl'>${c.pc>=60?'احتمال مرتفع':c.pc>=30?'احتمال متوسط':c.pc>0?'احتمال ضعيف':'لا هطول متوقع'}</div>`)+cdN('توقعات الأيام',days.map((d,j)=>`<div class="row"><span class="d">${j?DAYS[(new Date().getDay()+j)%7]:'اليوم'}</span><span class="ic">${SV('drop',20)}</span><div class="tr"><div class="fl" style="left:0;width:${Math.max(3,d[2])}%;background:linear-gradient(90deg,#64d2ff,#0a84ff)"></div></div><span class="hi" style="width:52px">${d[2]}%</span></div>`).join(''))+cdN('ماذا يعني الاحتمال؟','هو فرصة هطول مطر في الموقع خلال اليوم، ولا يدل على غزارته أو مدته. لا تتوفر كمية المطر بالملّيمتر في مصدر البيانات.')]}
+function cdMoon(c,lh){const m=moonInfo(c),SY=29.530588853,fm=t=>f12(t%24)+(t>=24?' (بكرة)':''),pk=[[0,'محاق'],[.25,'تربيع أول'],[.5,'بدر'],[.75,'تربيع أخير']].map(([t,n])=>{const d=((t-m.p+1)%1)*SY;return[d,n]}).sort((a,b)=>a[0]-b[0]);
+ const dt=d=>new Date(Date.now()+d*864e5).toLocaleDateString('ar-u-nu-latn',{day:'numeric',month:'long'});
+ let rs='';if(m.has){rs=`<tr><td>الطلوع</td><td>${m.rise!=null?fm(m.rise):'لا يطلع اليوم'}</td></tr><tr><td>الغروب</td><td>${m.set!=null?fm(m.set):'—'}</td></tr>`;if(m.rise!=null&&m.set!=null){const du=m.set-m.rise;rs+=`<tr><td>مدة بقائه في السماء</td><td>${Math.floor(du)} س ${Math.round((du%1)*60)} د</td></tr>`}}
+ return['القمر',cdN('الآن',`<div style='text-align:center'>${moonSvg(m.p).replace('width="76" height="76"','width="150" height="150"')}</div><div class='cdl' style='text-align:center;margin-top:8px'>${m.name}</div><table class='tbl'><tr><td>الإضاءة</td><td>${m.ill}%</td></tr><tr><td>عمر القمر</td><td>${m.age} يوم</td></tr>${rs}</table>`)+cdN('الأطوار القادمة (تقريبي)',`<table class='tbl'>${pk.map(x=>`<tr><td>${x[1]}</td><td>${dt(x[0])} (بعد نحو ${Math.round(x[0])} يوم)</td></tr>`).join('')}</table><small>حسابات فلكية تقريبية، قد تختلف بنحو نصف يوم، وليست لأغراض رؤية الهلال الشرعية.</small>`)]}
+function cdOpen(k){const c=cty(S[cur]),B={uv:cdUv,sun:cdSun,wind:cdWind,rain:cdRain,feel:cdFeel,hum:cdHum,moon:cdMoon}[k];if(!B)return;const r=B(c,lhr(c));$('#cdt').textContent=r[0];$('#cdb').innerHTML=r[1];$('#cd').classList.add('open');$('#cd').scrollTop=0}
+$('#cdx').onclick=()=>$('#cd').classList.remove('open');
+$('#main').addEventListener('click',e=>{const g=e.target.closest('.g>.glass');if(g)cdOpen(['uv','sun','wind','rain','feel','hum','moon'][[...g.parentNode.children].indexOf(g)])});
+let RC={},wt='c';
+function hlItems(c,days,lh){const o=[],real=!!c.real,sr=tm(c.sr),ss=tm(c.ss);
+ o.push(['therm',`الأجواء ${CN[c.c]}، العظمى ${c.hi}° والصغرى ${c.lo}°.`]);
+ if(real&&days.length){const p=days[0][2],nx=days.findIndex((d,i)=>i>0&&d[2]>=40);
+  o.push(['drop',p>=30?`احتمال الهطول اليوم ${p}%.`:nx>0?`لا هطول مهم اليوم، وأقرب احتمال مرتفع ${nx==1?'بكرة':DAYS[(new Date().getDay()+nx)%7]} (${days[nx][2]}%).`:`لا يُتوقع هطول مهم خلال ${days.length} أيام.`]);
+  const df=days[1]?days[1][1]-days[0][1]:0;if(Math.abs(df)>=2)o.push(['therm',`بكرة أ${df>0?'حر':'برد'} من اليوم بـ${Math.abs(df)}°.`])}
+ let best=-1e9,bx=lh;for(let q=0;q<24;q++){const v=hv(c,lh+q,lh,q);if(v>best){best=v;bx=lh+q}}
+ o.push(['sun',`ذروة الحرارة ${bx>=24?'بكرة ':''}نحو ${f12(bx)} (${Math.round(best)}°).`]);
+ o.push(['sunset',lh<sr?`الشروق ${f12(sr)}.`:lh<ss?`الغروب ${f12(ss)}.`:`الشروق بكرة ${f12(sr)}.`]);
+ return o.slice(0,5)}
+function hlCard(c,days,lh,hh,rows){RC={c,days,hh,rows};wt='c';
+ return`<div class="glass" style="--i:0"><div class="ct">${SV('sparkle',15)} أبرز النقاط</div>${hlItems(c,days,lh).map(([i,t])=>`<div class='hl3'>${SV(i,18)}<span>${t}</span></div>`).join('')}${c.real?'':`<small class='hln'>بيانات هذه المدينة تقديرية.</small>`}</div>`}
+function applyTab(){const{c,days,hh,rows}=RC;if(!c)return;
+ document.querySelectorAll('#ctabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==wt));
+ const nd=t=>`<div class='nodata'>${t}</div>`;let s1=hh,s2=rows;
+ if(wt=='p'){if(c.real){s1=nd('لا توجد بيانات هطول بالساعة؛ المتاح احتمال الهطول اليومي فقط.');
+   s2=days.map((d,j)=>`<div class="row"><span class="d">${j?DAYS[(new Date().getDay()+j)%7]:'اليوم'}</span><span class="ic">${SV('drop',20)}</span><div class="tr"><div class="fl" style="left:0;width:${Math.max(3,d[2])}%;background:linear-gradient(90deg,#64d2ff,#0a84ff)"></div></div><span class="hi" style="width:52px">${d[2]}%</span></div>`).join('')}
+  else{s1=nd('بيانات هذه المدينة تقديرية، فلا يوجد احتمال هطول فعلي.');s2=nd('لا توجد توقعات هطول فعلية لهذه المدينة.')}}
+ else if(wt=='w'){s1=c.w!=null?`<div class='h'><em>الآن</em>${SV('wind',28)}<em>${c.w} كم/س</em></div><div class='nodata' style='align-self:center'>قيمة تقديرية؛ لا توجد توقعات رياح فعلية بالساعة.</div>`:nd('لا توجد بيانات رياح فعلية لهذه المدينة.');s2=nd('لا توجد توقعات رياح يومية فعلية في التطبيق حالياً.')}
+ $('#hrs').innerHTML=s1;$('#dr').innerHTML=s2}
+$('#main').addEventListener('click',e=>{const b=e.target.closest('#ctabs button');if(b){wt=b.dataset.t;applyTab()}});
+let aiInited=false;
+function aiInit(){const cl=!!(window.claude&&claude.use);$('#aimode').textContent=cl?'متصل بـ Claude للأسئلة المفتوحة، وإذا تعذّر الاتصال يجيب المساعد المحلي من بيانات التطبيق.':'يعمل الآن بالمساعد المحلي (بدون Claude): يجيب عن الطقس والمطر والشروق والغروب واللبس ومقارنة المدن والنينو من بيانات التطبيق فقط، ولا يخترع أرقاماً.';
+ if(!aiInited){aiInited=true;addMsg('a','هلا! اسألني عن طقس '+cty(S[cur]).n+' أو أي مدينة، أو عن ظاهرة النينو.')}}
+async function ask(q){q=q.trim();if(busy||!q)return;busy=true;$('#aiq').value='';addMsg('u',q);const el=addMsg('a','…');let out=null;
+ if(smp===undefined){try{smp=window.claude&&claude.use?await claude.use('sample'):null}catch(e){smp=null}}
+ if(smp){try{const sys='أنت مساعد طقس داخل تطبيق. أجب بالعربية بلهجة مهذبة وموجزة (3 إلى 6 جمل). استخدم فقط البيانات التالية للأرقام ولا تخترع أرقاماً؛ إن لم تتوفر المعلومة فقل ذلك صراحة. النينو ظاهرة مناخية وليست عاصفة وليس لها مسار حركة. بيانات المدينة المعروضة الآن: '+aiCtx()+'\n\n'+AIN;
+   const msgs=[...hist,{role:'user',content:q}].map((m,i)=>i==0?{role:'user',content:sys+'\n\nالسؤال: '+m.content}:m);
+   const r=await smp(msgs,{cache:false,onText:({text})=>{el.textContent=text}});out=r.text;el.textContent=out}
+  catch(e){if(e&&e.code=='not_granted')smp=null;out=null}}
+ if(out==null){out=localAns(q);await typeIn(el,out)}
+ hist.push({role:'user',content:q},{role:'assistant',content:out});busy=false}
+render(0);
+</script></body></html>
